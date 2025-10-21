@@ -1,0 +1,45 @@
+# SMTP
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_app_password
+EMAIL_FROM="Stock Alert <your_email@gmail.com>"
+EMAIL_TO="you@company.com"
+
+# Timezone
+TZ=Asia/Seoul
+
+# Deduplication / crossings
+DAILY_DEDUP=true
+ALERT_ON_CROSSDOWN_ONLY=false
+ALERT_ON_CROSSUP_ONLY=false
+
+# Slack
+SLACK_ENABLE=true
+SLACK_USERNAME=Stock-Alert-Bot
+SLACK_ICON_EMOJI=:bar_chart:
+# Fallback webhook (optional if split used)
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/AAA/BBB/CCC
+# Split to different channels (two webhooks) for DOWN/UP
+SLACK_SPLIT_CHANNELS=true
+SLACK_WEBHOOK_DOWN=https://hooks.slack.com/services/RISK/XXX/YYY
+SLACK_WEBHOOK_UP=https://hooks.slack.com/services/WINS/XXX/YYY
+
+# Active trading window (local business hours)
+ACTIVE_WINDOW_ENABLE=true
+ACTIVE_TZ=Asia/Seoul
+ACTIVE_BUSINESS_DAYS_ONLY=true
+ACTIVE_START=09:00
+ACTIVE_END=15:30
+
+# Rate-limit
+ALERT_RATE_LIMIT_PER_TICKER_PER_DAY=2
+ALERT_MIN_INTERVAL_MINUTES=60
+ALERT_GLOBAL_DAILY_CAP=100
+
+# Weekly report
+WEEKLY_REPORT_ENABLE=true
+WEEKLY_REPORT_TZ=Asia/Seoul
+WEEKLY_REPORT_WHEN=6,18:00
+SLACK_WEBHOOK_REPORT=https://hooks.slack.com/services/REPORT/XXX/YYY
+WEEKLY_REPORT_SPLIT=false

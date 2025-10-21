@@ -1,0 +1,26 @@
+# loc, company_name, ticker, price_down, price_up
+국내, Samsung Electronics, 005930.KS, 60000, 90000
+국내, SK hynix, 000660.KS, 140000, 220000
+국내, LG Energy Solution, 373220.KS, 350000, 650000
+국내, Hyundai Motor, 005380.KS, 200000, 320000
+국내, Kakao Games, 293490.KQ, 25000, 42000
+국내, Samsung Biologics, 207940.KS, 300000, 450000
+국내, Naver, 035420.KS, 150000, 240000
+국내, Doosan Enerbility, 034020.KS, 19000, 35000
+국내, Jeju Air, 089590.KS, 12000, 22000
+국내, KakaoBank, 323410.KS, 25000, 40000
+
+미국, IonQ, IONQ, 40, 90
+미국, Alphabet (Google Class A), GOOGL, 100, 190
+미국, Meta Platforms, META, 250, 550
+미국, Nvidia, NVDA, 400, 1200
+미국, Tesla, TSLA, 150, 350
+미국, Amgen, AMGN, 220, 320
+미국, Walt Disney, DIS, 80, 140
+미국, ASML Holding N.V., ASML, 550, 1050
+미국, Microsoft, MSFT, 300, 500
+미국, Oracle, ORCL, 80, 160
+미국, Amazon.com, AMZN, 100, 220
+
+중국, Tencent Holdings Ltd, 0700.HK, 250, 420
+베트남, Vingroup JSC, VIC.VN, 35000, 70000

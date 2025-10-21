@@ -1,0 +1,93 @@
+name: Stock Alerts (2-hour)
+
+on:
+  schedule:
+    - cron: "0 */2 * * *"   # every 2 hours (UTC)
+  workflow_dispatch: {}
+
+jobs:
+  run-alerts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Prepare runtime folder
+        run: |
+          sudo mkdir -p /opt/stock_alert
+          sudo chown $USER:$USER /opt/stock_alert
+          cp -r src/* /opt/stock_alert/
+          cp examples/stock.txt /opt/stock_alert/stock.txt
+
+      - name: Build config from secrets
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          SLACK_ENABLE: ${{ secrets.SLACK_ENABLE }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_SPLIT_CHANNELS: ${{ secrets.SLACK_SPLIT_CHANNELS }}
+          SLACK_WEBHOOK_DOWN: ${{ secrets.SLACK_WEBHOOK_DOWN }}
+          SLACK_WEBHOOK_UP: ${{ secrets.SLACK_WEBHOOK_UP }}
+          SLACK_WEBHOOK_REPORT: ${{ secrets.SLACK_WEBHOOK_REPORT }}
+          TZV: ${{ secrets.TZ }}
+          ACTIVE_WINDOW_ENABLE: ${{ secrets.ACTIVE_WINDOW_ENABLE }}
+          ACTIVE_START: ${{ secrets.ACTIVE_START }}
+          ACTIVE_END: ${{ secrets.ACTIVE_END }}
+          ACTIVE_BUSINESS_DAYS_ONLY: ${{ secrets.ACTIVE_BUSINESS_DAYS_ONLY }}
+          ALERT_RATE_LIMIT_PER_TICKER_PER_DAY: ${{ secrets.ALERT_RATE_LIMIT_PER_TICKER_PER_DAY }}
+          ALERT_MIN_INTERVAL_MINUTES: ${{ secrets.ALERT_MIN_INTERVAL_MINUTES }}
+          ALERT_GLOBAL_DAILY_CAP: ${{ secrets.ALERT_GLOBAL_DAILY_CAP }}
+        run: |
+          cat > /opt/stock_alert/config.txt <<EOF
+          SMTP_HOST=${SMTP_HOST}
+          SMTP_PORT=${SMTP_PORT}
+          SMTP_USER=${SMTP_USER}
+          SMTP_PASS=${SMTP_PASS}
+          EMAIL_FROM=${EMAIL_FROM}
+          EMAIL_TO=${EMAIL_TO}
+          TZ=${TZV:-Asia/Seoul}
+
+          DAILY_DEDUP=true
+          ALERT_ON_CROSSDOWN_ONLY=false
+          ALERT_ON_CROSSUP_ONLY=false
+
+          SLACK_ENABLE=${SLACK_ENABLE:-true}
+          SLACK_USERNAME=Stock-Alert-Bot
+          SLACK_ICON_EMOJI=:bar_chart:
+          SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+          SLACK_SPLIT_CHANNELS=${SLACK_SPLIT_CHANNELS:-false}
+          SLACK_WEBHOOK_DOWN=${SLACK_WEBHOOK_DOWN}
+          SLACK_WEBHOOK_UP=${SLACK_WEBHOOK_UP}
+          SLACK_WEBHOOK_REPORT=${SLACK_WEBHOOK_REPORT}
+
+          ACTIVE_WINDOW_ENABLE=${ACTIVE_WINDOW_ENABLE:-false}
+          ACTIVE_TZ=${TZV:-Asia/Seoul}
+          ACTIVE_BUSINESS_DAYS_ONLY=${ACTIVE_BUSINESS_DAYS_ONLY:-true}
+          ACTIVE_START=${ACTIVE_START:-09:00}
+          ACTIVE_END=${ACTIVE_END:-15:30}
+
+          ALERT_RATE_LIMIT_PER_TICKER_PER_DAY=${ALERT_RATE_LIMIT_PER_TICKER_PER_DAY:-2}
+          ALERT_MIN_INTERVAL_MINUTES=${ALERT_MIN_INTERVAL_MINUTES:-60}
+          ALERT_GLOBAL_DAILY_CAP=${ALERT_GLOBAL_DAILY_CAP:-100}
+
+          WEEKLY_REPORT_ENABLE=false
+          WEEKLY_REPORT_TZ=${TZV:-Asia/Seoul}
+          WEEKLY_REPORT_WHEN=6,18:00
+          EOF
+
+      - name: Run alerts
+        run: |
+          python /opt/stock_alert/multi_stock_alert.py
