@@ -14,7 +14,7 @@
 미국, Alphabet (Google Class A), GOOGL, 100, 350
 미국, Meta Platforms, META, 250, 900
 미국, Nvidia, NVDA, 150, 600
-미국, Tesla, TSLA, 150, 350
+미국, Tesla, TSLA, 250, 500
 미국, Amgen, AMGN, 210, 320
 미국, Walt Disney, DIS, 80, 150
 미국, ASML Holding N.V., ASML, 550, 1050
