@@ -226,7 +226,7 @@ PR 환영합니다.
 
 ## 🧠 Credits
 
-Developed by [Geunsik Lim](https://github.com/leemgs)
-Powered by **Python 3.11 + GitHub Actions + Yahoo Finance API**
+* Developed by [Geunsik Lim](https://github.com/leemgs)
+* Powered by **Python 3.11 + GitHub Actions + Yahoo Finance API**
 
 ---
