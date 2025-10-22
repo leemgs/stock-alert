@@ -10,7 +10,7 @@
 국내, Jeju Air, 089590.KS, 5700, 13000
 국내, KakaoBank, 323410.KS, 20000, 32000
 
-미국, IonQ, IONQ, 40, 90
+미국, IonQ, IONQ, 45, 90
 미국, Alphabet (Google Class A), GOOGL, 100, 350
 미국, Meta Platforms, META, 250, 900
 미국, Nvidia, NVDA, 150, 600
