@@ -7,7 +7,7 @@
 국내, Samsung Biologics, 207940.KS, 300000, 1300000
 국내, Naver, 035420.KS, 150000, 280000
 국내, Doosan Enerbility, 034020.KS, 19000, 85000
-국내, Jeju Air, 089590.KS, 5500, 13000
+국내, Jeju Air, 089590.KS, 5700, 13000
 국내, KakaoBank, 323410.KS, 20000, 32000
 
 미국, IonQ, IONQ, 40, 90
