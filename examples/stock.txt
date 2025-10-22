@@ -1,26 +1,26 @@
 # loc, company_name, ticker, price_down, price_up
 국내, Samsung Electronics, 005930.KS, 60000, 120000
 국내, SK hynix, 000660.KS, 230000, 500000
-국내, LG Energy Solution, 373220.KS, 340000, 450000
+국내, LG Energy Solution, 373220.KS, 340000, 470000
 국내, Hyundai Motor, 005380.KS, 190000, 280000
 국내, Kakao Games, 293490.KQ, 12000, 42000
-국내, Samsung Biologics, 207940.KS, 300000, 450000
-국내, Naver, 035420.KS, 150000, 240000
-국내, Doosan Enerbility, 034020.KS, 19000, 35000
+국내, Samsung Biologics, 207940.KS, 300000, 1300000
+국내, Naver, 035420.KS, 150000, 280000
+국내, Doosan Enerbility, 034020.KS, 19000, 85000
 국내, Jeju Air, 089590.KS, 5500, 13000
 국내, KakaoBank, 323410.KS, 20000, 32000
 
 미국, IonQ, IONQ, 40, 90
-미국, Alphabet (Google Class A), GOOGL, 100, 190
-미국, Meta Platforms, META, 250, 550
+미국, Alphabet (Google Class A), GOOGL, 100, 350
+미국, Meta Platforms, META, 250, 900
 미국, Nvidia, NVDA, 150, 600
 미국, Tesla, TSLA, 150, 350
 미국, Amgen, AMGN, 210, 320
 미국, Walt Disney, DIS, 80, 150
 미국, ASML Holding N.V., ASML, 550, 1050
-미국, Microsoft, MSFT, 300, 500
-미국, Oracle, ORCL, 70, 160
-미국, Amazon.com, AMZN, 100, 220
+미국, Microsoft, MSFT, 300, 600
+미국, Oracle, ORCL, 100, 300
+미국, Amazon.com, AMZN, 100, 300
 
-중국, Tencent Holdings Ltd, 0700.HK, 250, 420
-베트남, Vingroup JSC, VIC.VN, 30000, 70000
+중국, Tencent Holdings Ltd, 0700.HK, 250, 700
+베트남, Vingroup JSC, VIC.VN, 30000, 250000
