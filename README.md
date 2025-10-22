@@ -24,7 +24,7 @@
 | **Slack 분기 채널 지원**     | 상승 시 `#wins`, 하락 시 `#risk` 등 별도 채널로 전송 가능            |
 | **주간 리포트**             | 주 1회 Slack 리포트 자동 발송 (지난 7일 상/하한 기록 요약)              |
 | **장중 실행 제한**           | 장중(예: 09:00~15:30) 시간대만 알림 수행                        |
-| **GitHub Actions 자동화** | 별도 서버 없이 2시간마다/주 1회 GitHub Actions로 자동 실행 가능         |
+| **GitHub Actions 자동화** | 별도 서버 없이 1시간마다/주 1회 GitHub Actions로 자동 실행 가능         |
 
 ---
 
@@ -114,7 +114,7 @@ ACTIVE_END=15:30
 이 프로젝트는 별도 서버 없이 GitHub Actions로 자동 실행할 수 있습니다.
 레포에 포함된 워크플로 파일:
 
-* `.github/workflows/alerts.yml` → **2시간마다 자동 알림**
+* `.github/workflows/alerts.yml` → **1시간마다 자동 알림**
 * `.github/workflows/weekly.yml` → **매주 일요일 18:00 KST 주간 리포트**
 
 ### 1️⃣ Secrets 등록 (Settings → Secrets → Actions)
@@ -133,13 +133,13 @@ ACTIVE_END=15:30
 
 ```bash
 # 수동 트리거
-gh workflow run "Stock Alerts (2-hour)"
+gh workflow run "Stock Alerts (1-hour)"
 gh workflow run "Weekly Stock Report"
 ```
 
 ### 3️⃣ 실행 주기 (UTC 기준)
 
-* 알림: `0 */2 * * *` → 2시간마다
+* 알림: `0 */1 * * *` → 1시간마다
 * 리포트: `0 9 * * 0` → 일요일 18:00 (KST)
 
 ---
@@ -198,7 +198,7 @@ Top 3 하락:
 
 | 파일명                            | 설명                                          |
 | ------------------------------ | ------------------------------------------- |
-| `.github/workflows/alerts.yml` | 2시간마다 주식 가격 알림 실행                           |
+| `.github/workflows/alerts.yml` | 1시간마다 주식 가격 알림 실행                           |
 | `.github/workflows/weekly.yml` | 매주 일요일 18시(KST) 주간 리포트 생성                   |
 | **GitHub Secrets**             | 민감정보(SMTP, Slack Webhook 등)는 Secrets를 통해 주입 |
 
