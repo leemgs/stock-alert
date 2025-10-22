@@ -87,7 +87,7 @@ loc, company_name, ticker, price_down, price_up
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your_email@gmail.com
-SMTP_PASS=your_password
+SMTP_PASS=your_app_password
 EMAIL_FROM=Stock Alert <your_email@gmail.com>
 EMAIL_TO=your_email@gmail.com
 
