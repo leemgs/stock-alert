@@ -63,8 +63,8 @@ vi /opt/stock_alert/stock.txt
 # 3. 테스트 실행
 python src/multi_stock_alert.py
 
-# 4. 크론 등록 (2시간마다)
-0 */2 * * * /opt/stock_alert/run.sh
+# 4. 크론 등록 (1시간마다)
+0 */1 * * * /opt/stock_alert/run.sh
 ```
 
 ---
