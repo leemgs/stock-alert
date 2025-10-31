@@ -198,7 +198,7 @@ Top 3 하락:
 
 | 파일명                            | 설명                                          |
 | ------------------------------ | ------------------------------------------- |
-| `.github/workflows/alerts.yml` | 1시간마다 주식 가격 알림 실행                           |
+| `.github/workflows/stock-alert-cached.yml` | 1시간마다 주식 가격 알림 실행                           |
 | `.github/workflows/weekly.yml` | 매주 일요일 18시(KST) 주간 리포트 생성                   |
 | **GitHub Secrets**             | 민감정보(SMTP, Slack Webhook 등)는 Secrets를 통해 주입 |
 
