@@ -46,7 +46,7 @@ jobs:
         env:
           TZ: Asia/Seoul
         run: |
-          python stock-alert-main/src/multi_stock_alert.py
+          python ./src/multi_stock_alert.py
 
       - name: Save history.json cache
         if: always()
