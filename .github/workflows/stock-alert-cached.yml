@@ -2,7 +2,7 @@ name: Stock Alerts (1-hour)
 
 on:
   schedule:
-    - cron: "*/1 * * * *"   # every 1 hour (UTC)
+    - cron: "0 */1 * * *"   # every 1 hour (UTC)
   workflow_dispatch: {}
 
 jobs:
