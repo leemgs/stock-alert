@@ -1,4 +1,4 @@
-name: Stock Alerts (2-hour)
+name: Stock Alerts (1-hour)
 
 on:
   schedule:
