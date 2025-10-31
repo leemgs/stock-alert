@@ -2,7 +2,7 @@ name: Stock Alerts (1-hour)
 
 on:
   schedule:
-    - cron: "0 */1 * * *"   # every 2 hours (UTC)
+    - cron: "0 */1 * * *"   # every 1 hour (UTC)
   workflow_dispatch: {}
 
 jobs:
@@ -16,7 +16,23 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install deps
+      
+- name: Restore history.json cache
+  id: restore-history
+  uses: actions/cache/restore@v4
+  with:
+    path: data/history.json
+    key: ${{ runner.os }}-history-${{ github.run_number }}
+    restore-keys: |
+      ${{ runner.os }}-history-
+
+- name: Ensure history.json exists
+  run: |
+    mkdir -p data
+    if [ ! -f data/history.json ]; then
+      echo '{}' > data/history.json
+    fi
+- name: Install deps
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -88,6 +104,26 @@ jobs:
           WEEKLY_REPORT_WHEN=6,18:00
           EOF
 
-      - name: Run alerts
+      
+- name: Sync history.json into runtime
+  run: |
+    mkdir -p /opt/stock_alert/data
+    cp -f data/history.json /opt/stock_alert/data/history.json || true
+- name: Run alerts
         run: |
           python /opt/stock_alert/multi_stock_alert.py
+
+- name: Sync history.json back to repo
+  if: always()
+  run: |
+    if [ -f /opt/stock_alert/data/history.json ]; then
+      mkdir -p data
+      cp -f /opt/stock_alert/data/history.json data/history.json
+    fi
+
+- name: Save history.json cache
+  if: always()
+  uses: actions/cache/save@v4
+  with:
+    path: data/history.json
+    key: ${{ runner.os }}-history-${{ github.run_number }}
