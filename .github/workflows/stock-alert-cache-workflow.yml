@@ -40,7 +40,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install -U pip
-          pip install -r stock-alert-main/requirements.txt
+          pip install -r requirements.txt
 
       - name: Run stock alert
         env:
