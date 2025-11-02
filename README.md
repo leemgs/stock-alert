@@ -224,6 +224,18 @@ PR 환영합니다.
 
 ---
 
+## 사용 상황별 추천
+
+* 히스토리컬 주가(일별)만 필요할 때 → yfinance 혹은 pandas-datareader
+
+* 실시간 혹은 분단위 데이터 + 기술지표까지 필요할 때 → alpha_vantage
+
+* 국내/해외 다양한 시장(주식, ETF, 지수 등)에서 범용적 데이터 필요할 때 → investpy
+
+* 간단하게 현재가만 빠르게 조회할 때 → stockquotes
+
+
+
 ## 🧠 Credits
 
 * Developed by [Geunsik Lim](https://github.com/leemgs)
