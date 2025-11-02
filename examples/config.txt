@@ -13,6 +13,7 @@ TZ=Asia/Seoul
 DAILY_DEDUP=true
 ALERT_ON_CROSSDOWN_ONLY=false
 ALERT_ON_CROSSUP_ONLY=false
+INFO_TYPE=info
 
 # Slack
 SLACK_ENABLE=true
