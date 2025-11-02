@@ -8,7 +8,7 @@ import yfinance as yf
 ticker = "207940.KS"
 
 # 조회 방식 선택: "fast_info" 또는 "info"
-info_type = "fast_info"   # ← "fast_info" 또는 "info" 로 변경 가능
+info_type = "info"   # ← "fast_info" 또는 "info" 로 변경 가능
 
 # 티커 객체 생성
 stock = yf.Ticker(ticker)
