@@ -1,4 +1,18 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Stock Alert Bot
+- BASE: /opt/stock_alert
+- INFO_TYPE: "info" (default) or "fast_info"
+- History mode (K3): auto — disabled on CI/GitHub Actions, enabled otherwise.
+
+Files under /opt/stock_alert:
+  - multi_stock_alert.py  (this script)
+  - config.txt            (key=value)
+  - stock.txt             (CSV-like lines: loc, name, ticker, price_down, price_up)
+  - state.json            (runtime state)
+  - history.json          (recent alerts log; auto-disabled on CI)
+"""
 import os, sys, csv, json, smtplib, ssl, datetime, traceback
 from pathlib import Path
 from email.mime.text import MIMEText
@@ -7,6 +21,7 @@ import yfinance as yf
 import pytz
 import requests
 
+# ---------- Paths / Constants ----------
 BASE = Path("/opt/stock_alert")
 CONFIG_PATH = BASE / "config.txt"
 STOCKS_PATH = BASE / "stock.txt"
@@ -14,6 +29,14 @@ STATE_PATH  = BASE / "state.json"
 HISTORY_PATH= BASE / "history.json"
 LOG_PREFIX  = "[STOCK-ALERT] "
 
+# ---------- Helpers: env / CI detection ----------
+def _is_ci_like_env() -> bool:
+    # GitHub Actions exposes GITHUB_ACTIONS=true and CI=true
+    ga = os.getenv("GITHUB_ACTIONS", "").lower() == "true"
+    ci = os.getenv("CI", "").lower() == "true"
+    return ga or ci
+
+# ---------- Config ----------
 def load_kv(path: Path) -> dict:
     kv={}
     for raw in path.read_text(encoding="utf-8").splitlines():
@@ -37,7 +60,7 @@ def load_config(path: Path)->dict:
     c.setdefault("SLACK_ENABLE","false")
     c.setdefault("SLACK_USERNAME","Stock-Alert-Bot")
     c.setdefault("SLACK_ICON_EMOJI",":bar_chart:")
-    c.setdefault("SLACK_SPLIT_CHANNELS","false")
+    c.setdefault("SLACK_SPLIT_CHANNELS","false")   # A: default single channel
 
     # Active window
     c.setdefault("ACTIVE_WINDOW_ENABLE","false")
@@ -51,6 +74,13 @@ def load_config(path: Path)->dict:
     c.setdefault("ALERT_MIN_INTERVAL_MINUTES","60")
     c.setdefault("ALERT_GLOBAL_DAILY_CAP","100")
 
+    # Price source
+    c.setdefault("INFO_TYPE", "info")
+
+    # History mode (K3: auto)
+    # HISTORY_MODE in {"auto","on","off"}
+    c.setdefault("HISTORY_MODE", "auto")
+
     # types
     c["SMTP_PORT"]=int(c["SMTP_PORT"])
     c["DAILY_DEDUP"]=c["DAILY_DEDUP"].lower()=="true"
@@ -63,8 +93,24 @@ def load_config(path: Path)->dict:
     c["ALERT_RATE_LIMIT_PER_TICKER_PER_DAY"]=int(c["ALERT_RATE_LIMIT_PER_TICKER_PER_DAY"])
     c["ALERT_MIN_INTERVAL_MINUTES"]=int(c["ALERT_MIN_INTERVAL_MINUTES"])
     c["ALERT_GLOBAL_DAILY_CAP"]=int(c["ALERT_GLOBAL_DAILY_CAP"])
+    c["INFO_TYPE"]=c["INFO_TYPE"].lower().strip()
+    if c["INFO_TYPE"] not in {"fast_info","info"}:
+        c["INFO_TYPE"] = "info"
+
+    hm = c["HISTORY_MODE"].lower().strip()
+    if hm not in {"auto","on","off"}:
+        hm = "auto"
+    # Resolve auto -> disabled on CI, enabled otherwise
+    if hm == "auto":
+        c["HISTORY_ENABLE"] = (not _is_ci_like_env())
+    elif hm == "on":
+        c["HISTORY_ENABLE"] = True
+    else:
+        c["HISTORY_ENABLE"] = False
+
     return c
 
+# ---------- Stocks / State / History ----------
 def parse_float_or_none(s:str):
     s=s.strip()
     if not s: return None
@@ -77,7 +123,7 @@ def load_stocks(path:Path):
         for raw in f:
             line=raw.strip()
             if not line or line.startswith("#"): continue
-            parts=[p.strip() for p in line.split(",")]
+            parts=[p.strip() for p in line.split(",") ]
             while len(parts)<5: parts.append("")
             loc,name,ticker,down_str,up_str = parts[:5]
             down=parse_float_or_none(down_str); up=parse_float_or_none(up_str)
@@ -98,18 +144,23 @@ def load_state():
 
 def save_state(st): STATE_PATH.write_text(json.dumps(st,ensure_ascii=False),encoding="utf-8")
 
-def load_history():
+def load_history(cfg):
+    if not cfg.get("HISTORY_ENABLE", True):
+        return []
     if HISTORY_PATH.exists():
         try: return json.loads(HISTORY_PATH.read_text(encoding="utf-8"))
         except: pass
     return []
 
-def append_history(events):
-    hist = load_history()
+def append_history(cfg, events):
+    if not cfg.get("HISTORY_ENABLE", True):
+        return
+    hist = load_history(cfg)
     hist.extend(events)
     if len(hist)>5000: hist=hist[-5000:]
     HISTORY_PATH.write_text(json.dumps(hist,ensure_ascii=False),encoding="utf-8")
 
+# ---------- Time / Window ----------
 def now_tz(tzname:str):
     return datetime.datetime.now(pytz.timezone(tzname))
 
@@ -123,17 +174,46 @@ def within_active_window(cfg:dict)->bool:
     end=now.replace(hour=eh,minute=em,second=0,microsecond=0)
     return start<=now<=end
 
-def fetch_price(ticker:str):
-    t=yf.Ticker(ticker); price=None
-    try: price=t.fast_info.last_price
-    except: price=None
+# ---------- Price fetch (requested logic) ----------
+def fetch_price(ticker: str, info_type: str = "info"):
+    t = yf.Ticker(ticker)
+
+    fast_price = None
+    info_price = None
+
+    # fast_info
+    try:
+        fast_price = t.fast_info.last_price
+    except Exception:
+        fast_price = None
+
+    # info
+    try:
+        info_data = t.info
+        info_price = info_data.get("regularMarketPrice")
+    except Exception:
+        info_price = None
+
+    # 선택 우선순위
+    if info_type == "fast_info":
+        primary, secondary = fast_price, info_price
+    else:  # default "info"
+        primary, secondary = info_price, fast_price
+
+    price = primary if primary is not None else secondary
+
+    # 최종 폴백: 1분봉 Close
     if price is None:
         try:
-            hist=t.history(period="1d",interval="1m")
-            if not hist.empty: price=float(hist["Close"].iloc[-1])
-        except: price=None
+            hist = t.history(period="1d", interval="1m")
+            if not hist.empty:
+                price = float(hist["Close"].iloc[-1])
+        except Exception:
+            price = None
+
     return price
 
+# ---------- Email / Slack ----------
 def send_email(cfg, subj, body):
     msg=MIMEText(body,_charset="utf-8")
     msg["Subject"]=subj; msg["From"]=cfg["EMAIL_FROM"]; msg["To"]=cfg["EMAIL_TO"]
@@ -152,7 +232,7 @@ def slack_blocks_section(title, rows):
     blocks=[]
     if rows:
         blocks.append({"type":"section","text":{"type":"mrkdwn","text":f"*{title}*"}})
-        desc="\n".join(rows)
+        desc = "\n".join(rows)
         blocks.append({"type":"section","text":{"type":"mrkdwn","text":desc}})
     return blocks
 
@@ -171,8 +251,7 @@ def send_slack_split(cfg, ts_str, down_breaches, up_breaches, errors):
         url = cfg.get("SLACK_WEBHOOK_DOWN") or cfg.get("SLACK_WEBHOOK_URL")
         if url:
             rows=[f"- *{n}* `{t}`: `{p:.2f}` ≤ `{th:.2f}`" for n,t,p,th in down_breaches]
-            blocks = slack_blocks_header(ts_str) + \
-                     slack_blocks_section(":small_red_triangle_down: 하한 돌파 (현재가 ≤ 하한)", rows)
+            blocks = slack_blocks_header(ts_str) +                      slack_blocks_section(":small_red_triangle_down: 하한 돌파 (현재가 ≤ 하한)", rows)
             if errors:
                 blocks.append({"type":"divider"})
                 blocks += slack_blocks_section("_(참고) 조회 오류_", [f"- {e}" for e in errors])
@@ -182,14 +261,13 @@ def send_slack_split(cfg, ts_str, down_breaches, up_breaches, errors):
         url = cfg.get("SLACK_WEBHOOK_UP") or cfg.get("SLACK_WEBHOOK_URL")
         if url:
             rows=[f"- *{n}* `{t}`: `{p:.2f}` ≥ `{th:.2f}`" for n,t,p,th in up_breaches]
-            blocks = slack_blocks_header(ts_str) + \
-                     slack_blocks_section(":small_red_triangle: 상한 돌파 (현재가 ≥ 상한)", rows)
+            blocks = slack_blocks_header(ts_str) +                      slack_blocks_section(":small_red_triangle: 상한 돌파 (현재가 ≥ 상한)", rows)
             if errors and not down_breaches:
                 blocks.append({"type":"divider"})
                 blocks += slack_blocks_section("_(참고) 조회 오류_", [f"- {e}" for e in errors])
             post_slack(url, username, icon, blocks)
 
-# ========== Rate-limit helpers ==========
+# ---------- Rate-limit ----------
 def rl_reset_if_new_day(state, today):
     if state["alert_counters"].get("date") != today:
         state["alert_counters"] = {"date": today, "per": {}}
@@ -226,10 +304,11 @@ def rl_commit(state, ticker, kind, now_dt):
     state["global_counter"]["count"] = state["global_counter"].get("count", 0) + 1
     state["last_alert_ts"][k] = now_dt.isoformat()
 
-# ========================================
-
+# ---------- Main ----------
 def main():
     cfg = load_config(CONFIG_PATH)
+    info_type = cfg.get("INFO_TYPE", "info").lower()
+
     if not within_active_window(cfg):
         print(LOG_PREFIX+"비활성 시간대 — 알림/슬랙 생략"); return
 
@@ -245,7 +324,7 @@ def main():
     for s in stocks:
         tkr=s["ticker"]; dth=s["down"]; uth=s["up"]
         try:
-            price=fetch_price(tkr)
+            price=fetch_price(tkr, info_type)
             if price is None:
                 errors.append(f"{tkr}: 가격 조회 실패"); continue
             last=state["last_price"].get(tkr)
@@ -326,8 +405,7 @@ def main():
                         rows += [f"- *{n}* `{t}`: `{p:.2f}` ≤ `{th:.2f}`" for n,t,p,th in down_breaches]
                     if up_breaches:
                         rows += [f"- *{n}* `{t}`: `{p:.2f}` ≥ `{th:.2f}`" for n,t,p,th in up_breaches]
-                    blocks = slack_blocks_header(ts_str) + \
-                             slack_blocks_section("임계 도달 종목 (상/하한)", rows)
+                    blocks = slack_blocks_header(ts_str) +                              slack_blocks_section("임계 도달 종목 (상/하한)", rows)
                     if errors or rate_limited_notes:
                         blocks.append({"type":"divider"})
                         if errors:
@@ -339,9 +417,9 @@ def main():
         note = []
         if rate_limited_notes: note.append("rate-limit 생략: "+", ".join(rate_limited_notes))
         if errors: note.append("오류: "+" | ".join(errors))
-        if note: print(LOG_PREFIX+"; ".join(note), file=sys.stderr)
+        if note: print(LOG_PREFIX+"; "+"; ".join(note), file=sys.stderr)
 
-    if new_events: append_history(new_events)
+    if new_events: append_history(cfg, new_events)
     save_state(state)
 
 if __name__=="__main__":
