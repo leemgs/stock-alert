@@ -51,6 +51,9 @@ def load_config(path: Path)->dict:
     c.setdefault("ALERT_MIN_INTERVAL_MINUTES","60")
     c.setdefault("ALERT_GLOBAL_DAILY_CAP","100")
 
+    # Price source selection: "fast_info" or "info" (default: "info")
+    c.setdefault("INFO_TYPE", "info")
+
     # types
     c["SMTP_PORT"]=int(c["SMTP_PORT"])
     c["DAILY_DEDUP"]=c["DAILY_DEDUP"].lower()=="true"
@@ -63,6 +66,9 @@ def load_config(path: Path)->dict:
     c["ALERT_RATE_LIMIT_PER_TICKER_PER_DAY"]=int(c["ALERT_RATE_LIMIT_PER_TICKER_PER_DAY"])
     c["ALERT_MIN_INTERVAL_MINUTES"]=int(c["ALERT_MIN_INTERVAL_MINUTES"])
     c["ALERT_GLOBAL_DAILY_CAP"]=int(c["ALERT_GLOBAL_DAILY_CAP"])
+    c["INFO_TYPE"]=c["INFO_TYPE"].lower().strip()
+    if c["INFO_TYPE"] not in {"fast_info","info"}:
+        c["INFO_TYPE"] = "info"
     return c
 
 def parse_float_or_none(s:str):
@@ -123,15 +129,42 @@ def within_active_window(cfg:dict)->bool:
     end=now.replace(hour=eh,minute=em,second=0,microsecond=0)
     return start<=now<=end
 
-def fetch_price(ticker:str):
-    t=yf.Ticker(ticker); price=None
-    try: price=t.fast_info.last_price
-    except: price=None
+def fetch_price(ticker: str, info_type: str = "info"):
+    t = yf.Ticker(ticker)
+
+    fast_price = None
+    info_price = None
+
+    # Try fast_info
+    try:
+        fast_price = t.fast_info.last_price
+    except Exception:
+        fast_price = None
+
+    # Try info
+    try:
+        info_data = t.info
+        info_price = info_data.get("regularMarketPrice")
+    except Exception:
+        info_price = None
+
+    # Select by preference
+    if info_type == "fast_info":
+        primary, secondary = fast_price, info_price
+    else:  # default "info"
+        primary, secondary = info_price, fast_price
+
+    price = primary if primary is not None else secondary
+
+    # Final fallback: recent 1m candle
     if price is None:
         try:
-            hist=t.history(period="1d",interval="1m")
-            if not hist.empty: price=float(hist["Close"].iloc[-1])
-        except: price=None
+            hist = t.history(period="1d", interval="1m")
+            if not hist.empty:
+                price = float(hist["Close"].iloc[-1])
+        except Exception:
+            price = None
+
     return price
 
 def send_email(cfg, subj, body):
@@ -152,7 +185,8 @@ def slack_blocks_section(title, rows):
     blocks=[]
     if rows:
         blocks.append({"type":"section","text":{"type":"mrkdwn","text":f"*{title}*"}})
-        desc="\n".join(rows)
+        desc="
+".join(rows)
         blocks.append({"type":"section","text":{"type":"mrkdwn","text":desc}})
     return blocks
 
@@ -171,8 +205,7 @@ def send_slack_split(cfg, ts_str, down_breaches, up_breaches, errors):
         url = cfg.get("SLACK_WEBHOOK_DOWN") or cfg.get("SLACK_WEBHOOK_URL")
         if url:
             rows=[f"- *{n}* `{t}`: `{p:.2f}` ≤ `{th:.2f}`" for n,t,p,th in down_breaches]
-            blocks = slack_blocks_header(ts_str) + \
-                     slack_blocks_section(":small_red_triangle_down: 하한 돌파 (현재가 ≤ 하한)", rows)
+            blocks = slack_blocks_header(ts_str) +                      slack_blocks_section(":small_red_triangle_down: 하한 돌파 (현재가 ≤ 하한)", rows)
             if errors:
                 blocks.append({"type":"divider"})
                 blocks += slack_blocks_section("_(참고) 조회 오류_", [f"- {e}" for e in errors])
@@ -182,8 +215,7 @@ def send_slack_split(cfg, ts_str, down_breaches, up_breaches, errors):
         url = cfg.get("SLACK_WEBHOOK_UP") or cfg.get("SLACK_WEBHOOK_URL")
         if url:
             rows=[f"- *{n}* `{t}`: `{p:.2f}` ≥ `{th:.2f}`" for n,t,p,th in up_breaches]
-            blocks = slack_blocks_header(ts_str) + \
-                     slack_blocks_section(":small_red_triangle: 상한 돌파 (현재가 ≥ 상한)", rows)
+            blocks = slack_blocks_header(ts_str) +                      slack_blocks_section(":small_red_triangle: 상한 돌파 (현재가 ≥ 상한)", rows)
             if errors and not down_breaches:
                 blocks.append({"type":"divider"})
                 blocks += slack_blocks_section("_(참고) 조회 오류_", [f"- {e}" for e in errors])
@@ -230,6 +262,8 @@ def rl_commit(state, ticker, kind, now_dt):
 
 def main():
     cfg = load_config(CONFIG_PATH)
+    info_type = cfg.get("INFO_TYPE", "info").lower()
+
     if not within_active_window(cfg):
         print(LOG_PREFIX+"비활성 시간대 — 알림/슬랙 생략"); return
 
@@ -245,7 +279,7 @@ def main():
     for s in stocks:
         tkr=s["ticker"]; dth=s["down"]; uth=s["up"]
         try:
-            price=fetch_price(tkr)
+            price=fetch_price(tkr, info_type)
             if price is None:
                 errors.append(f"{tkr}: 가격 조회 실패"); continue
             last=state["last_price"].get(tkr)
@@ -298,17 +332,22 @@ def main():
     if down_breaches or up_breaches:
         lines=[f"시각: {ts_str}"]
         if down_breaches:
-            lines.append("\n[하한 돌파] (현재가 ≤ 하한)")
+            lines.append("
+[하한 돌파] (현재가 ≤ 하한)")
             for n,t,p,th in down_breaches: lines.append(f"- {n} ({t}): {p:.2f} ≤ {th:.2f}")
         if up_breaches:
-            lines.append("\n[상한 돌파] (현재가 ≥ 상한)")
+            lines.append("
+[상한 돌파] (현재가 ≥ 상한)")
             for n,t,p,th in up_breaches: lines.append(f"- {n} ({t}): {p:.2f} ≥ {th:.2f}")
         if rate_limited_notes:
-            lines.append("\n(참고) rate-limit으로 생략된 알림:")
+            lines.append("
+(참고) rate-limit으로 생략된 알림:")
             lines += [f"- {x}" for x in rate_limited_notes]
         if errors:
-            lines.append("\n(참고) 조회 오류:"); lines += [f"- {e}" for e in errors]
-        body="\n".join(lines)
+            lines.append("
+(참고) 조회 오류:"); lines += [f"- {e}" for e in errors]
+        body="
+".join(lines)
         try:
             send_email(cfg, "[Stock Alert] 임계 도달 종목 (상/하한)", body)
             print(LOG_PREFIX+"메일 발송 완료")
@@ -326,8 +365,7 @@ def main():
                         rows += [f"- *{n}* `{t}`: `{p:.2f}` ≤ `{th:.2f}`" for n,t,p,th in down_breaches]
                     if up_breaches:
                         rows += [f"- *{n}* `{t}`: `{p:.2f}` ≥ `{th:.2f}`" for n,t,p,th in up_breaches]
-                    blocks = slack_blocks_header(ts_str) + \
-                             slack_blocks_section("임계 도달 종목 (상/하한)", rows)
+                    blocks = slack_blocks_header(ts_str) +                              slack_blocks_section("임계 도달 종목 (상/하한)", rows)
                     if errors or rate_limited_notes:
                         blocks.append({"type":"divider"})
                         if errors:
