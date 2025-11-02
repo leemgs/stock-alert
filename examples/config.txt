@@ -14,6 +14,8 @@ DAILY_DEDUP=true
 ALERT_ON_CROSSDOWN_ONLY=false
 ALERT_ON_CROSSUP_ONLY=false
 INFO_TYPE=info
+HISTORY_MODE=auto   # on/off/auto (K3 기본: auto)
+
 
 # Slack
 SLACK_ENABLE=true
