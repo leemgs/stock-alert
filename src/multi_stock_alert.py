@@ -4,7 +4,7 @@
 Stock Alert Bot
 - BASE: /opt/stock_alert
 - INFO_TYPE: "info" (default) or "fast_info"
-- History mode (K3): auto — disabled on CI/GitHub Actions, enabled otherwise.
+- History mode (K3): auto �� disabled on CI/GitHub Actions, enabled otherwise.
 
 Files under /opt/stock_alert:
   - multi_stock_alert.py  (this script)
@@ -27,7 +27,7 @@ CONFIG_PATH = BASE / "config.txt"
 STOCKS_PATH = BASE / "stock.txt"
 STATE_PATH  = BASE / "state.json"
 HISTORY_PATH= BASE / "history.json"
-LOG_PREFIX = "[STOCK-ALERT] "
+LOG_PREFIX  = "[STOCK-ALERT] "
 GITHUB_URL  = "https://github.com/leemgs/stock-alert"
 
 # ---------- Helpers: env / CI detection ----------
@@ -195,7 +195,7 @@ def fetch_price(ticker: str, info_type: str = "info"):
     except Exception:
         info_price = None
 
-    # 선택 우선순위
+    # �좏깮 �곗꽑�쒖쐞
     if info_type == "fast_info":
         primary, secondary = fast_price, info_price
     else:  # default "info"
@@ -203,7 +203,7 @@ def fetch_price(ticker: str, info_type: str = "info"):
 
     price = primary if primary is not None else secondary
 
-    # 최종 폴백: 1분봉 Close
+    # 理쒖쥌 �대갚: 1遺꾨큺 Close
     if price is None:
         try:
             hist = t.history(period="1d", interval="1m")
@@ -225,8 +225,8 @@ def send_email(cfg, subj, body):
 
 def slack_blocks_header(ts_str): 
     return [
-        {"type":"header","text":{"type":"plain_text","text":"📈 Stock Alert","emoji":True}},
-        {"type":"context","elements":[{"type":"mrkdwn","text":f"*시각:* {ts_str}"}]}
+        {"type":"header","text":{"type":"plain_text","text":"�뱢 Stock Alert","emoji":True}},
+        {"type":"context","elements":[{"type":"mrkdwn","text":f"*�쒓컖:* {ts_str}"}]}
     ]
 
 def slack_blocks_section(title, rows):
@@ -241,10 +241,7 @@ def post_slack(url, username, icon_emoji, blocks):
     payload={"username":username, "icon_emoji":icon_emoji, "blocks":blocks}
     r=requests.post(url, json=payload, timeout=10)
     if r.status_code!=200:
-        print(LOG_PREFIX
-GITHUB_URL  = "https://github.com/leemgs/stock-alert"
-
-#+f"Slack 전송 실패: {r.status_code} {r.text}", file=sys.stderr)
+        print(LOG_PREFIX+f"Slack �꾩넚 �ㅽ뙣: {r.status_code} {r.text}", file=sys.stderr)
 
 def send_slack_split(cfg, ts_str, down_breaches, up_breaches, errors):
     if not cfg["SLACK_ENABLE"]: return
@@ -254,21 +251,21 @@ def send_slack_split(cfg, ts_str, down_breaches, up_breaches, errors):
     if down_breaches:
         url = cfg.get("SLACK_WEBHOOK_DOWN") or cfg.get("SLACK_WEBHOOK_URL")
         if url:
-            rows=[f"- *{n}* `{t}`: `{p:.2f}` ≤ `{th:.2f}`" for n,t,p,th in down_breaches]
-            blocks = slack_blocks_header(ts_str) +                      slack_blocks_section(":small_red_triangle_down: 하한 돌파 (현재가 ≤ 하한)", rows)
+            rows=[f"- *{n}* `{t}`: `{p:.2f}` �� `{th:.2f}`" for n,t,p,th in down_breaches]
+            blocks = slack_blocks_header(ts_str) +                      slack_blocks_section(":small_red_triangle_down: �섑븳 �뚰뙆 (�꾩옱媛� �� �섑븳)", rows)
             if errors:
                 blocks.append({"type":"divider"})
-                blocks += slack_blocks_section("_(참고) 조회 오류_", [f"- {e}" for e in errors])
+                blocks += slack_blocks_section("_(李멸퀬) 議고쉶 �ㅻ쪟_", [f"- {e}" for e in errors])
             post_slack(url, username, icon, blocks)
 
     if up_breaches:
         url = cfg.get("SLACK_WEBHOOK_UP") or cfg.get("SLACK_WEBHOOK_URL")
         if url:
-            rows=[f"- *{n}* `{t}`: `{p:.2f}` ≥ `{th:.2f}`" for n,t,p,th in up_breaches]
-            blocks = slack_blocks_header(ts_str) +                      slack_blocks_section(":small_red_triangle: 상한 돌파 (현재가 ≥ 상한)", rows)
+            rows=[f"- *{n}* `{t}`: `{p:.2f}` �� `{th:.2f}`" for n,t,p,th in up_breaches]
+            blocks = slack_blocks_header(ts_str) +                      slack_blocks_section(":small_red_triangle: �곹븳 �뚰뙆 (�꾩옱媛� �� �곹븳)", rows)
             if errors and not down_breaches:
                 blocks.append({"type":"divider"})
-                blocks += slack_blocks_section("_(참고) 조회 오류_", [f"- {e}" for e in errors])
+                blocks += slack_blocks_section("_(李멸퀬) 議고쉶 �ㅻ쪟_", [f"- {e}" for e in errors])
             post_slack(url, username, icon, blocks)
 
 # ---------- Rate-limit ----------
@@ -314,10 +311,7 @@ def main():
     info_type = cfg.get("INFO_TYPE", "info").lower()
 
     if not within_active_window(cfg):
-        print(LOG_PREFIX
-GITHUB_URL  = "https://github.com/leemgs/stock-alert"
-
-#+"비활성 시간대 — 알림/슬랙 생략"); return
+        print(LOG_PREFIX+"鍮꾪솢�� �쒓컙�� �� �뚮┝/�щ옓 �앸왂"); return
 
     stocks=load_stocks(STOCKS_PATH)
     state =load_state()
@@ -333,7 +327,7 @@ GITHUB_URL  = "https://github.com/leemgs/stock-alert"
         try:
             price=fetch_price(tkr, info_type)
             if price is None:
-                errors.append(f"{tkr}: 가격 조회 실패"); continue
+                errors.append(f"{tkr}: 媛�寃� 議고쉶 �ㅽ뙣"); continue
             last=state["last_price"].get(tkr)
 
             if dth is not None:
@@ -354,7 +348,7 @@ GITHUB_URL  = "https://github.com/leemgs/stock-alert"
                         rl_commit(state, tkr, "down", ts)
                         new_events.append({"ts":ts_str,"dir":"down","name":s["name"],"ticker":tkr,"price":price,"threshold":dth})
                     else:
-                        rate_limited_notes.append(f"{tkr}|down 제한({why})")
+                        rate_limited_notes.append(f"{tkr}|down �쒗븳({why})")
 
             if uth is not None:
                 crossed=(last is not None and last<uth and price>=uth)
@@ -374,7 +368,7 @@ GITHUB_URL  = "https://github.com/leemgs/stock-alert"
                         rl_commit(state, tkr, "up", ts)
                         new_events.append({"ts":ts_str,"dir":"up","name":s["name"],"ticker":tkr,"price":price,"threshold":uth})
                     else:
-                        rate_limited_notes.append(f"{tkr}|up 제한({why})")
+                        rate_limited_notes.append(f"{tkr}|up �쒗븳({why})")
 
             state["last_price"][tkr]=price
 
@@ -382,31 +376,25 @@ GITHUB_URL  = "https://github.com/leemgs/stock-alert"
             errors.append(f"{tkr}: {e}")
 
     if down_breaches or up_breaches:
-        lines=[GITHUB_URL, "", f"시각: {ts_str}"]
+        lines = [GITHUB_URL, "", f"�쒓컖: {ts_str}"]
         if down_breaches:
-            lines.append("\n[하한 돌파] (현재가 ≤ 하한)")
-            for n,t,p,th in down_breaches: lines.append(f"- {n} ({t}): {p:.2f} ≤ {th:.2f}")
+            lines.append("\n[�섑븳 �뚰뙆] (�꾩옱媛� �� �섑븳)")
+            for n,t,p,th in down_breaches: lines.append(f"- {n} ({t}): {p:.2f} �� {th:.2f}")
         if up_breaches:
-            lines.append("\n[상한 돌파] (현재가 ≥ 상한)")
-            for n,t,p,th in up_breaches: lines.append(f"- {n} ({t}): {p:.2f} ≥ {th:.2f}")
+            lines.append("\n[�곹븳 �뚰뙆] (�꾩옱媛� �� �곹븳)")
+            for n,t,p,th in up_breaches: lines.append(f"- {n} ({t}): {p:.2f} �� {th:.2f}")
         if rate_limited_notes:
-            lines.append("\n(참고) rate-limit으로 생략된 알림:")
+            lines.append("\n(李멸퀬) rate-limit�쇰줈 �앸왂�� �뚮┝:")
             lines += [f"- {x}" for x in rate_limited_notes]
         if errors:
-            lines.append("\n(참고) 조회 오류:"); lines += [f"- {e}" for e in errors]
+            lines.append("\n(李멸퀬) 議고쉶 �ㅻ쪟:"); lines += [f"- {e}" for e in errors]
         body="\n".join(lines)
-    print(body)
+        print(body)
         try:
-            send_email(cfg, "[Stock Alert] 임계 도달 종목 (상/하한)", body)
-            print(LOG_PREFIX
-GITHUB_URL  = "https://github.com/leemgs/stock-alert"
-
-#+"메일 발송 완료")
+            send_email(cfg, "[Stock Alert] �꾧퀎 �꾨떖 醫낅ぉ (��/�섑븳)", body)
+            print(LOG_PREFIX+"硫붿씪 諛쒖넚 �꾨즺")
         except Exception as e:
-            print(LOG_PREFIX
-GITHUB_URL  = "https://github.com/leemgs/stock-alert"
-
-#+f"메일 발송 실패: {e}", file=sys.stderr)
+            print(LOG_PREFIX+f"硫붿씪 諛쒖넚 �ㅽ뙣: {e}", file=sys.stderr)
 
         if cfg["SLACK_ENABLE"]:
             if cfg["SLACK_SPLIT_CHANNELS"]:
@@ -416,25 +404,22 @@ GITHUB_URL  = "https://github.com/leemgs/stock-alert"
                 if url:
                     rows=[]
                     if down_breaches:
-                        rows += [f"- *{n}* `{t}`: `{p:.2f}` ≤ `{th:.2f}`" for n,t,p,th in down_breaches]
+                        rows += [f"- *{n}* `{t}`: `{p:.2f}` �� `{th:.2f}`" for n,t,p,th in down_breaches]
                     if up_breaches:
-                        rows += [f"- *{n}* `{t}`: `{p:.2f}` ≥ `{th:.2f}`" for n,t,p,th in up_breaches]
-                    blocks = slack_blocks_header(ts_str) +                              slack_blocks_section("임계 도달 종목 (상/하한)", rows)
+                        rows += [f"- *{n}* `{t}`: `{p:.2f}` �� `{th:.2f}`" for n,t,p,th in up_breaches]
+                    blocks = slack_blocks_header(ts_str) +                              slack_blocks_section("�꾧퀎 �꾨떖 醫낅ぉ (��/�섑븳)", rows)
                     if errors or rate_limited_notes:
                         blocks.append({"type":"divider"})
                         if errors:
-                            blocks += slack_blocks_section("_(참고) 조회 오류_", [f"- {e}" for e in errors])
+                            blocks += slack_blocks_section("_(李멸퀬) 議고쉶 �ㅻ쪟_", [f"- {e}" for e in errors])
                         if rate_limited_notes:
-                            blocks += slack_blocks_section("_(참고) rate-limit 생략_", [f"- {x}" for x in rate_limited_notes])
+                            blocks += slack_blocks_section("_(李멸퀬) rate-limit �앸왂_", [f"- {x}" for x in rate_limited_notes])
                     post_slack(url, cfg.get("SLACK_USERNAME","Stock-Alert-Bot"), cfg.get("SLACK_ICON_EMOJI",":bar_chart:"), blocks)
     else:
         note = []
-        if rate_limited_notes: note.append("rate-limit 생략: "+", ".join(rate_limited_notes))
-        if errors: note.append("오류: "+" | ".join(errors))
-        if note: print(LOG_PREFIX
-GITHUB_URL  = "https://github.com/leemgs/stock-alert"
-
-#+"; "+"; ".join(note), file=sys.stderr)
+        if rate_limited_notes: note.append("rate-limit �앸왂: "+", ".join(rate_limited_notes))
+        if errors: note.append("�ㅻ쪟: "+" | ".join(errors))
+        if note: print(LOG_PREFIX+"; "+"; ".join(note), file=sys.stderr)
 
     if new_events: append_history(cfg, new_events)
     save_state(state)
@@ -442,8 +427,5 @@ GITHUB_URL  = "https://github.com/leemgs/stock-alert"
 if __name__=="__main__":
     try: main()
     except Exception:
-        print(LOG_PREFIX
-GITHUB_URL  = "https://github.com/leemgs/stock-alert"
-
-#+"오류 발생:\n"+traceback.format_exc(), file=sys.stderr)
+        print(LOG_PREFIX+"�ㅻ쪟 諛쒖깮:\n"+traceback.format_exc(), file=sys.stderr)
         sys.exit(1)
