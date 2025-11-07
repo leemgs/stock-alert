@@ -27,10 +27,8 @@ CONFIG_PATH = BASE / "config.txt"
 STOCKS_PATH = BASE / "stock.txt"
 STATE_PATH  = BASE / "state.json"
 HISTORY_PATH= BASE / "history.json"
-LOG_PREFIX
+LOG_PREFIX = "[STOCK-ALERT] "
 GITHUB_URL  = "https://github.com/leemgs/stock-alert"
-
-#  = "[STOCK-ALERT] "
 
 # ---------- Helpers: env / CI detection ----------
 def _is_ci_like_env() -> bool:
