@@ -28,6 +28,8 @@ STOCKS_PATH = BASE / "stock.txt"
 STATE_PATH  = BASE / "state.json"
 HISTORY_PATH= BASE / "history.json"
 LOG_PREFIX  = "[STOCK-ALERT] "
+GITHUB_URL = "https://github.com/leemgs/stock-alert"   
+
 
 # ---------- Helpers: env / CI detection ----------
 def _is_ci_like_env() -> bool:
@@ -375,7 +377,8 @@ def main():
             errors.append(f"{tkr}: {e}")
 
     if down_breaches or up_breaches:
-        lines=[f"시각: {ts_str}"]
+        lines = [GITHUB_URL, ""]
+        lines.append(f"시각: {ts_str}")
         if down_breaches:
             lines.append("\n[하한 돌파] (현재가 ≤ 하한)")
             for n,t,p,th in down_breaches: lines.append(f"- {n} ({t}): {p:.2f} ≤ {th:.2f}")
