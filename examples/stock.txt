@@ -25,3 +25,4 @@
 
 중국, Tencent Holdings Ltd, 0700.HK, 250, 700
 베트남, Vingroup JSC, VIC.VN, 30000, 250000
+암호화폐, Bitcoin, BTC-USD, 30000, 120000
