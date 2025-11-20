@@ -11,7 +11,7 @@
 국내, 특수건설, 026150.KQ, 5000, 13000
 국내, Samsung Biologics, 207940.KS, 920000, 1300000
 
-미국, IonQ, IONQ, 45, 90
+미국, IonQ, IONQ, 40, 90
 미국, Alphabet (Google Class A), GOOGL, 100, 350
 미국, Meta Platforms, META, 250, 900
 미국, Nvidia, NVDA, 150, 600
