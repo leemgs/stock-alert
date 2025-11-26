@@ -241,4 +241,9 @@ PR 환영합니다.
 * Developed by [Geunsik Lim](https://github.com/leemgs)
 * Powered by **Python 3.11 + GitHub Actions + Yahoo Finance API**
 
+
+## Reference
+* https://comp.wisereport.co.kr/company/c1070001.aspx?cmp_cd=005930&cn (삼성 임원 주식 보유현황)
+* https://pypi.org/project/yfinance/ (Yahoo Finance 파이썬 라이브러리) 
+
 ---
