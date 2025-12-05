@@ -2,7 +2,7 @@
 국내, Samsung Electronics, 005930.KS, 60000, 120000
 국내, SK hynix, 000660.KS, 230000, 650000
 국내, LG Energy Solution, 373220.KS, 340000, 550000
-국내, Hyundai Motor, 005380.KS, 190000, 310000
+국내, Hyundai Motor, 005380.KS, 190000, 350000
 국내, Kakao Games, 293490.KQ, 12000, 42000
 국내, Naver, 035420.KS, 150000, 280000
 국내, Doosan Enerbility, 034020.KS, 25000, 110000
