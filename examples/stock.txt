@@ -9,7 +9,7 @@
 국내, Jeju Air, 089590.KS, 5000, 13000
 국내, KakaoBank, 323410.KS, 20000, 34000
 국내, 특수건설, 026150.KQ, 5000, 13000
-국내, Samsung Biologics, 207940.KS, 920000, 1800000
+국내, Samsung Biologics, 207940.KS, 920000, 1900000
 
 미국, IonQ, IONQ, 40, 90
 미국, Alphabet (Google Class A), GOOGL, 100, 350
