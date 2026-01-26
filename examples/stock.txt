@@ -12,7 +12,7 @@
 국내, Samsung Biologics, 207940.KS, 920000, 2300000
 국내, Satoshi Holdings (딥마인드), 223310.KS, 1900, 7000
 
-미국, IonQ, IONQ, 47, 90
+미국, IonQ, IONQ, 42, 90
 미국, Alphabet (Google Class A), GOOGL, 100, 350
 미국, Meta Platforms, META, 250, 900
 미국, Nvidia, NVDA, 150, 600
