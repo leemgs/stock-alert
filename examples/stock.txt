@@ -4,7 +4,7 @@
 국내, LG Energy Solution, 373220.KS, 340000, 550000
 국내, Hyundai Motor, 005380.KS, 190000, 590000
 국내, Kakao Games, 293490.KQ, 12000, 42000
-국내, Naver, 035420.KS, 150000, 280000
+국내, Naver, 035420.KS, 150000, 310000
 국내, Doosan Enerbility, 034020.KS, 25000, 110000
 국내, Jeju Air, 089590.KS, 5100, 12000
 국내, KakaoBank, 323410.KS, 20000, 33000
