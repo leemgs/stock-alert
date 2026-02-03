@@ -6,7 +6,7 @@
 국내, NAVER Corporation, 035420.KS, 150000, 310000
 국내, Doosan Enerbility, 034020.KS, 25000, 110000
 국내, Jeju Air, 089590.KS, 5100, 12000
-국내, KakaoBank, 323410.KS, 20000, 33000
+국내, KakaoBank, 323410.KS, 20000, 24500
 국내, Teuksu Construction, 026150.KQ, 5000, 13000
 국내, Samsung Biologics, 207940.KS, 920000, 2300000
 국내, Satoshi Holdings, 223310.KS, 1900, 7000
