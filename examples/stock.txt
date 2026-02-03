@@ -9,11 +9,10 @@
 국내, KakaoBank, 323410.KS, 20000, 24500
 국내, Teuksu Construction, 026150.KQ, 5000, 13000
 국내, Samsung Biologics, 207940.KS, 920000, 2300000
-국내, Satoshi Holdings, 223310.KS, 1900, 7000
+국내, Satoshi Holdings, 223310.KS, 1900, 3000
 
 미국, IonQ, IONQ, 38, 90
-미국, Alphabet Inc. Class A, GOOGL, 150, 350.50
-미국, Alphabet Inc. Class C, GOOG, 140, 370.53
+미국, Alphabet Inc. Class C, GOOG, 230, 370.53
 미국, Meta Platforms, META, 250, 900
 미국, NVIDIA Corporation, NVDA, 150, 600
 미국, Tesla Inc., TSLA, 250, 500
