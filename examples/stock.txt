@@ -5,14 +5,14 @@
 국내, Kakao Games, 293490.KQ, 12000, 42000
 국내, NAVER Corporation, 035420.KS, 150000, 310000
 국내, Doosan Enerbility, 034020.KS, 25000, 110000
-국내, Jeju Air, 089590.KS, 5100, 12000
+국내, Jeju Air, 089590.KS, 5100, 11000
 국내, KakaoBank, 323410.KS, 20000, 26000
 국내, 특수건설, 026150.KQ, 6000, 12000
 국내, Samsung Biologics, 207940.KS, 920000, 2300000
 국내, Satoshi Holdings (딥마인드), 223310.KS, 1900, 4000
 
 미국, IonQ, IONQ, 37, 90
-미국, Alphabet Inc. Class C, GOOG, 230, 370.53
+미국, Alphabet Inc. Class C, GOOG, 280, 370.53
 미국, Meta Platforms, META, 250, 900
 미국, NVIDIA Corporation, NVDA, 150, 600
 미국, Tesla Inc., TSLA, 250, 500
