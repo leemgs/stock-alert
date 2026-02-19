@@ -225,6 +225,6 @@ Top 3 하락:
 ## Reference
 * https://comp.wisereport.co.kr/company/c1070001.aspx?cmp_cd=005930&cn (삼성 임원 주식 보유현황)
 * https://pypi.org/project/yfinance/ (Yahoo Finance 파이썬 라이브러리)
- * Ticker (22310.KQ)으로 조회 - https://finance.yahoo.com/quote/223310.KQ/
+  - Ticker (22310.KQ)으로 조회 - https://finance.yahoo.com/quote/223310.KQ/
 
 ---
