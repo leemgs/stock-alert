@@ -207,31 +207,11 @@ Top 3 하락:
 
 ---
 
-## ⚖️ License
-
-This project is licensed under the **Apache License 2.0**.
-See the [LICENSE](./LICENSE) file for details.
-
----
-
-## 🤝 Contributing
-
-PR 환영합니다.
-
-* 코드 포맷: **PEP8**
-* 커밋 컨벤션: `feat:`, `fix:`, `ci:`, `docs:`, `chore:` 등
-* 테스트 커맨드: `pytest -v`
-
----
-
 ## 사용 상황별 추천
 
 * 히스토리컬 주가(일별)만 필요할 때 → yfinance 혹은 pandas-datareader
-
 * 실시간 혹은 분단위 데이터 + 기술지표까지 필요할 때 → alpha_vantage
-
 * 국내/해외 다양한 시장(주식, ETF, 지수 등)에서 범용적 데이터 필요할 때 → investpy
-
 * 간단하게 현재가만 빠르게 조회할 때 → stockquotes
 
 
@@ -244,6 +224,7 @@ PR 환영합니다.
 
 ## Reference
 * https://comp.wisereport.co.kr/company/c1070001.aspx?cmp_cd=005930&cn (삼성 임원 주식 보유현황)
-* https://pypi.org/project/yfinance/ (Yahoo Finance 파이썬 라이브러리) 
+* https://pypi.org/project/yfinance/ (Yahoo Finance 파이썬 라이브러리)
+ * Ticker (22310.KQ)으로 조회 - https://finance.yahoo.com/quote/223310.KQ/
 
 ---
