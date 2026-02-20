@@ -9,7 +9,7 @@
 국내, KakaoBank, 323410.KS, 20000, 29000
 국내, 특수건설, 026150.KQ, 6000, 12000
 국내, Samsung Biologics, 207940.KS, 920000, 2300000
-국내, Satoshi Holdings (deepmind), 223310.KQ, 1810, 2300
+국내, Satoshi Holdings (deepmind), 223310.KQ, 1750, 2300
 
 미국, IonQ, IONQ, 30, 80
 미국, Alphabet Inc. Class C, GOOG, 300, 420
