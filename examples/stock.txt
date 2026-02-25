@@ -18,7 +18,7 @@
 미국, Tesla Inc., TSLA, 250, 500
 미국, Amgen, AMGN, 210, 390
 미국, The Walt Disney Company, DIS, 80, 150
-미국, ASML Holding N.V., ASML, 550, 1500
+미국, ASML Holding N.V., ASML, 550, 1550
 미국, Microsoft, MSFT, 300, 600
 미국, Oracle Corporation, ORCL, 100, 300
 미국, Amazon.com, AMZN, 100, 310
