@@ -12,7 +12,7 @@
 국내, Satoshi Holdings (deepmind), 223310.KQ, 1350, 2500
 
 미국, IonQ, IONQ, 30, 80
-미국, Alphabet Inc. Class C, GOOG, 300, 420
+미국, Alphabet Inc. Class C, GOOG, 280, 420
 미국, Meta Platforms, META, 250, 900
 미국, NVIDIA Corporation, NVDA, 150, 600
 미국, Tesla Inc., TSLA, 250, 500
