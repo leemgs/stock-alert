@@ -1,4 +1,4 @@
-국내, Samsung Electronics, 005930.KS, 60000, 270000
+국내, Samsung Electronics, 005930.KS, 60000, 290000
 국내, SK hynix, 000660.KS, 230000, 1800000
 국내, LG Energy Solution, 373220.KS, 345000, 550000
 국내, Hyundai Motor Company, 005380.KS, 190000, 680000
