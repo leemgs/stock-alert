@@ -8,6 +8,8 @@ on:
 jobs:
   run-alerts:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -120,6 +122,22 @@ jobs:
           if [ -f /opt/stock_alert/data/history.json ]; then
             mkdir -p data
             cp -f /opt/stock_alert/data/history.json data/history.json
+          fi
+
+      - name: Sync stock.txt back and commit
+        if: always()
+        run: |
+          if [ -f /opt/stock_alert/stock.txt ]; then
+            cp -f /opt/stock_alert/stock.txt examples/stock.txt
+            if ! git diff --quiet examples/stock.txt; then
+              git config --local user.email "action@github.com"
+              git config --local user.name "GitHub Action"
+              git add examples/stock.txt
+              git commit -m "[Stock Alert] Update thresholds (+/- 10%)"
+              git push
+            else
+              echo "No changes in stock.txt"
+            fi
           fi
 
       - name: Save history.json cache

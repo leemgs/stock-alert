@@ -146,6 +146,45 @@ def load_state():
 
 def save_state(st): STATE_PATH.write_text(json.dumps(st,ensure_ascii=False),encoding="utf-8")
 
+def update_stock_file(path: Path, updates: dict):
+    """
+    Updates the stock.txt file with new threshold values.
+    updates: { ticker: { 'down': float, 'up': float } }
+    """
+    if not updates:
+        return
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+        new_lines = []
+        for line in lines:
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                new_lines.append(line)
+                continue
+            
+            # Use comma-separated logic
+            parts = [p.strip() for p in line.split(",")]
+            if len(parts) >= 3:
+                ticker = parts[2]
+                if ticker in updates:
+                    upd = updates[ticker]
+                    # loc, name, ticker, down, up
+                    while len(parts) < 5: parts.append("")
+                    
+                    if 'down' in upd and upd['down'] is not None:
+                        parts[3] = f"{upd['down']:.2f}"
+                    if 'up' in upd and upd['up'] is not None:
+                        parts[4] = f"{upd['up']:.2f}"
+                    
+                    # Reconstruct line. Use ", " for readability as in the example.
+                    line = ", ".join(parts)
+            new_lines.append(line)
+        
+        path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+        print(f"{LOG_PREFIX}stock.txt 임계값 업데이트 완료: {list(updates.keys())}")
+    except Exception as e:
+        print(f"{LOG_PREFIX}파일 업데이트 중 오류 발생: {e}", file=sys.stderr)
+
 def load_history(cfg):
     if not cfg.get("HISTORY_ENABLE", True):
         return []
@@ -322,6 +361,7 @@ def main():
 
     down_breaches=[]; up_breaches=[]; errors=[]; new_events=[]
     rate_limited_notes=[]
+    updates = {} # {ticker: {'down': val, 'up': val}}
 
     for s in stocks:
         tkr=s["ticker"]; dth=s["down"]; uth=s["up"]
@@ -348,6 +388,11 @@ def main():
                         state["last_alert_date"][f"{tkr}|down"]=today
                         rl_commit(state, tkr, "down", ts)
                         new_events.append({"ts":ts_str,"dir":"down","name":s["name"],"ticker":tkr,"price":price,"threshold":dth})
+                        
+                        # [Mission] Update threshold: -10%
+                        new_val = dth * 0.9
+                        if tkr not in updates: updates[tkr] = {}
+                        updates[tkr]['down'] = new_val
                     else:
                         rate_limited_notes.append(f"{tkr}|down 제한({why})")
 
@@ -368,6 +413,11 @@ def main():
                         state["last_alert_date"][f"{tkr}|up"]=today
                         rl_commit(state, tkr, "up", ts)
                         new_events.append({"ts":ts_str,"dir":"up","name":s["name"],"ticker":tkr,"price":price,"threshold":uth})
+                        
+                        # [Mission] Update threshold: +10%
+                        new_val = uth * 1.1
+                        if tkr not in updates: updates[tkr] = {}
+                        updates[tkr]['up'] = new_val
                     else:
                         rate_limited_notes.append(f"{tkr}|up 제한({why})")
 
@@ -381,10 +431,10 @@ def main():
         lines.append(f"시각: {ts_str}")
         if down_breaches:
             lines.append("\n[하한 돌파] (현재가 ≤ 하한)")
-            for n,t,p,th in down_breaches: lines.append(f"- {n} ({t}): {p:.2f} ≤ {th:.2f}")
+            for n,t,p,th in down_breaches: lines.append(f"- {n} ({t}): {p:.2f} ≤ {th:.2f}.")
         if up_breaches:
             lines.append("\n[상한 돌파] (현재가 ≥ 상한)")
-            for n,t,p,th in up_breaches: lines.append(f"- {n} ({t}): {p:.2f} ≥ {th:.2f}")
+            for n,t,p,th in up_breaches: lines.append(f"- {n} ({t}): {p:.2f} ≥ {th:.2f}.")
         if rate_limited_notes:
             lines.append("\n(참고) rate-limit으로 생략된 알림:")
             lines += [f"- {x}" for x in rate_limited_notes]
@@ -423,6 +473,8 @@ def main():
         if note: print(LOG_PREFIX+"; "+"; ".join(note), file=sys.stderr)
 
     if new_events: append_history(cfg, new_events)
+    if updates:
+        update_stock_file(STOCKS_PATH, updates)
     save_state(state)
 
 if __name__=="__main__":
