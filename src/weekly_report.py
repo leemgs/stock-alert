@@ -15,13 +15,111 @@ def load_kv(path:Path):
         k,v=s.split("=",1); kv[k.strip()]=v.strip()
     return kv
 
-def send_email(cfg, subj, body):
-    msg=MIMEText(body,_charset="utf-8")
+def send_email(cfg, subj, body, subtype="plain"):
+    msg=MIMEText(body, subtype, _charset="utf-8")
     msg["Subject"]=subj; msg["From"]=cfg["EMAIL_FROM"]; msg["To"]=cfg["EMAIL_TO"]
     ctx=ssl.create_default_context()
     with smtplib.SMTP(cfg["SMTP_HOST"], int(cfg["SMTP_PORT"]), timeout=20) as s:
         s.ehlo(); s.starttls(context=ctx); s.login(cfg["SMTP_USER"], cfg["SMTP_PASS"])
         s.sendmail(cfg["EMAIL_FROM"], [cfg["EMAIL_TO"]], msg.as_string())
+
+def generate_weekly_html(since_str, now_str, total, downs, ups, by_ticker):
+    """
+    Generates a premium HTML body for the weekly report email.
+    """
+    styles = """
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f7f9; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .header { background: #34495e; color: #ffffff; padding: 25px; text-align: center; }
+        .header h1 { margin: 0; font-size: 22px; font-weight: 600; }
+        .header p { margin: 5px 0 0; opacity: 0.8; font-size: 14px; }
+        .content { padding: 30px; }
+        .summary-grid { display: flex; justify-content: space-between; margin-bottom: 25px; background: #f8f9fa; border-radius: 6px; padding: 15px; }
+        .summary-item { text-align: center; flex: 1; }
+        .summary-label { font-size: 12px; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px; }
+        .summary-value { font-size: 20px; font-weight: bold; color: #2c3e50; }
+        .table-container { margin-top: 20px; border: 1px solid #eee; border-radius: 6px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8f9fa; text-align: left; padding: 12px 15px; font-size: 13px; color: #7f8c8d; border-bottom: 1px solid #eee; }
+        td { padding: 12px 15px; font-size: 14px; border-bottom: 1px solid #eee; }
+        .ticker-name { font-weight: 600; color: #2c3e50; }
+        .count-down { color: #3498db; font-weight: bold; }
+        .count-up { color: #e74c3c; font-weight: bold; }
+        .footer { background: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #eee; }
+        .empty-msg { text-align: center; color: #95a5a6; font-style: italic; padding: 20px; }
+    </style>
+    """
+
+    ticker_rows = ""
+    if by_ticker:
+        for k, v in sorted(by_ticker.items(), key=lambda x: (x[1]['down'] + x[1]['up']), reverse=True):
+            ticker_rows += f"""
+            <tr>
+                <td class="ticker-name">{k}</td>
+                <td class="count-down">{v['down']}</td>
+                <td class="count-up">{v['up']}</td>
+                <td style="text-align:right; font-weight:bold;">{v['down'] + v['up']}</td>
+            </tr>
+            """
+    else:
+        ticker_rows = '<tr><td colspan="4" class="empty-msg">지난 7일간 알림 내역이 없습니다.</td></tr>'
+
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        {styles}
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>주간 스톡 리포트</h1>
+                <p>{since_str} ~ {now_str}</p>
+            </div>
+            <div class="content">
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div class="summary-label">총 알림</div>
+                        <div class="summary-value">{total}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">하한 돌파</div>
+                        <div class="summary-value" style="color:#3498db;">{downs}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">상한 돌파</div>
+                        <div class="summary-value" style="color:#e74c3c;">{ups}</div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>종목 (티커)</th>
+                                <th>하향</th>
+                                <th>상향</th>
+                                <th style="text-align:right;">합계</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {ticker_rows}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="footer">
+                Stock Alert Bot - Weekly Summary Report<br>
+                본 리포트는 최근 7일간의 알림 기록을 바탕으로 자동 생성되었습니다.
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html
 
 def post_slack(url, username, icon, blocks):
     payload={"username":username,"icon_emoji":icon,"blocks":blocks}
@@ -61,9 +159,13 @@ def main():
         lines.append("_지난 7일간 알림 없음_")
     body="\n".join(lines)
 
-    # 이메일
+    # 이메일 발송
     try:
-        send_email(cfg, "[Stock Alert] 주간 리포트", body)
+        since_str = since.strftime('%Y-%m-%d')
+        now_str = now.strftime('%Y-%m-%d')
+        html_report = generate_weekly_html(since_str, now_str, total, downs, ups, by_ticker)
+        
+        send_email(cfg, "[Stock Alert] 주간 리포트", html_report, subtype="html")
         print("[WEEKLY] 이메일 발송 완료")
     except Exception as e:
         print(f"[WEEKLY] 이메일 발송 실패: {e}", file=sys.stderr)

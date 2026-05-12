@@ -255,13 +255,111 @@ def fetch_price(ticker: str, info_type: str = "info"):
     return price
 
 # ---------- Email / Slack ----------
-def send_email(cfg, subj, body):
-    msg=MIMEText(body,_charset="utf-8")
+def send_email(cfg, subj, body, subtype="plain"):
+    msg=MIMEText(body, subtype, _charset="utf-8")
     msg["Subject"]=subj; msg["From"]=cfg["EMAIL_FROM"]; msg["To"]=cfg["EMAIL_TO"]
     ctx=ssl.create_default_context()
     with smtplib.SMTP(cfg["SMTP_HOST"], cfg["SMTP_PORT"], timeout=20) as s:
         s.ehlo(); s.starttls(context=ctx); s.login(cfg["SMTP_USER"], cfg["SMTP_PASS"])
         s.sendmail(cfg["EMAIL_FROM"], [cfg["EMAIL_TO"]], msg.as_string())
+
+def generate_html_body(ts_str, down_breaches, up_breaches, errors, rate_limited_notes):
+    """
+    Generates a premium HTML body for the stock alert email.
+    """
+    # CSS Styles
+    styles = """
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f7f9; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .header { background: #2c3e50; color: #ffffff; padding: 25px; text-align: center; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: 1px; }
+        .header p { margin: 5px 0 0; opacity: 0.8; font-size: 14px; }
+        .content { padding: 30px; }
+        .section-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #eee; }
+        .down-title { color: #3498db; border-color: #3498db; }
+        .up-title { color: #e74c3c; border-color: #e74c3c; }
+        .alert-card { background: #fdfdfd; border: 1px solid #eee; border-radius: 6px; padding: 15px; margin-bottom: 12px; }
+        .ticker { font-weight: bold; font-size: 16px; color: #2c3e50; }
+        .price-info { margin-top: 5px; font-size: 15px; }
+        .price-value { font-family: 'Courier New', Courier, monospace; font-weight: bold; }
+        .footer { background: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #eee; }
+        .footer a { color: #3498db; text-decoration: none; }
+        .error-section { background: #fff5f5; border-left: 4px solid #fc8181; padding: 10px 15px; margin-top: 20px; border-radius: 0 4px 4px 0; }
+        .error-title { color: #c53030; font-weight: bold; font-size: 14px; margin-bottom: 5px; }
+        .error-item { font-size: 13px; color: #742a2a; margin: 2px 0; }
+        .note-section { background: #fffaf0; border-left: 4px solid #f6ad55; padding: 10px 15px; margin-top: 15px; border-radius: 0 4px 4px 0; }
+        .note-title { color: #9c4221; font-weight: bold; font-size: 14px; margin-bottom: 5px; }
+        .note-item { font-size: 13px; color: #7b341e; margin: 2px 0; }
+    </style>
+    """
+
+    # Build Sections
+    down_html = ""
+    if down_breaches:
+        down_html = '<div class="section-title down-title">📉 하한 돌파 (현재가 ≤ 하한)</div>'
+        for n, t, p, th in down_breaches:
+            down_html += f"""
+            <div class="alert-card">
+                <div class="ticker">{n} <span style="color:#7f8c8d; font-weight:normal;">({t})</span></div>
+                <div class="price-info">
+                    현재가 <span class="price-value" style="color:#3498db;">{p:.2f}</span> ≤ 하한가 <span class="price-value">{th:.2f}</span>
+                </div>
+            </div>
+            """
+
+    up_html = ""
+    if up_breaches:
+        up_html = '<div class="section-title up-title">📈 상한 돌파 (현재가 ≥ 상한)</div>'
+        for n, t, p, th in up_breaches:
+            up_html += f"""
+            <div class="alert-card">
+                <div class="ticker">{n} <span style="color:#7f8c8d; font-weight:normal;">({t})</span></div>
+                <div class="price-info">
+                    현재가 <span class="price-value" style="color:#e74c3c;">{p:.2f}</span> ≥ 상한가 <span class="price-value">{th:.2f}</span>
+                </div>
+            </div>
+            """
+
+    error_html = ""
+    if errors:
+        items = "".join([f'<div class="error-item">• {e}</div>' for e in errors])
+        error_html = f'<div class="error-section"><div class="error-title">⚠️ 조회 오류</div>{items}</div>'
+
+    note_html = ""
+    if rate_limited_notes:
+        items = "".join([f'<div class="note-item">• {x}</div>' for x in rate_limited_notes])
+        note_html = f'<div class="note-section"><div class="note-title">ℹ️ 생략된 알림 (Rate-limit)</div>{items}</div>'
+
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        {styles}
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Stock Alert</h1>
+                <p>{ts_str}</p>
+            </div>
+            <div class="content">
+                {down_html}
+                {up_html}
+                {note_html}
+                {error_html}
+            </div>
+            <div class="footer">
+                발송원: <a href="{GITHUB_URL}">Stock Alert Bot (GitHub)</a><br>
+                본 메일은 설정된 임계치 도달 시 자동으로 발송됩니다.
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html
 
 def slack_blocks_header(ts_str): 
     return [
@@ -427,22 +525,11 @@ def main():
             errors.append(f"{tkr}: {e}")
 
     if down_breaches or up_breaches:
-        lines = [GITHUB_URL, ""]
-        lines.append(f"시각: {ts_str}")
-        if down_breaches:
-            lines.append("\n[하한 돌파] (현재가 ≤ 하한)")
-            for n,t,p,th in down_breaches: lines.append(f"- {n} ({t}): {p:.2f} ≤ {th:.2f}.")
-        if up_breaches:
-            lines.append("\n[상한 돌파] (현재가 ≥ 상한)")
-            for n,t,p,th in up_breaches: lines.append(f"- {n} ({t}): {p:.2f} ≥ {th:.2f}.")
-        if rate_limited_notes:
-            lines.append("\n(참고) rate-limit으로 생략된 알림:")
-            lines += [f"- {x}" for x in rate_limited_notes]
-        if errors:
-            lines.append("\n(참고) 조회 오류:"); lines += [f"- {e}" for e in errors]
-        body="\n".join(lines)
+        # Generate HTML Body
+        html_body = generate_html_body(ts_str, down_breaches, up_breaches, errors, rate_limited_notes)
+        
         try:
-            send_email(cfg, "[Stock Alert] 임계 도달 종목 (상/하한)", body)
+            send_email(cfg, "[Stock Alert] 임계 도달 종목 (상/하한)", html_body, subtype="html")
             print(LOG_PREFIX+"메일 발송 완료")
         except Exception as e:
             print(LOG_PREFIX+f"메일 발송 실패: {e}", file=sys.stderr)
