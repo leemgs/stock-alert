@@ -5,7 +5,7 @@
 
 **자동 주식 임계가(상한/하한) 감시 및 이메일·Slack 알림 시스템**
 
-![Stock Alert Preview](img/screenshot.png)
+![Stock Alert Preview](img/gmail-stock-alert.jpg)
 
 본 프로젝트는
 
