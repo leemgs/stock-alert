@@ -5,6 +5,8 @@
 
 **자동 주식 임계가(상한/하한) 감시 및 이메일·Slack 알림 시스템**
 
+![Stock Alert Preview](img/screenshot.png)
+
 본 프로젝트는
 
 * 국내(KOSPI/KOSDAQ) 및 해외(NASDAQ/NYSE/HK/VN 등) 주요 종목의 실시간 가격을 감시하고,
@@ -167,10 +169,10 @@ gh workflow run "Weekly Stock Report"
 - **하한 돌파**: 신중한 파란색 카드로 강조
 - **반응형 디자인**: 모바일 및 데스크톱 이메일 클라이언트 최적화
 
+![Stock Alert Email Screenshot](img/screenshot.png)
+
 ```text
 Subject: [Stock Alert] 임계 도달 종목 (상/하한)
-시각: 2025-10-21 18:00:00 KST
-(현대적인 HTML 레이아웃으로 발송됨)
 ```
 
 ### Slack (#wins)
