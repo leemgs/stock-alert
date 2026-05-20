@@ -1,4 +1,4 @@
-name: Weekly Stock Report
+name: Weekly Stock Report (Saturday 9 AM)
 
 on:
   schedule:
