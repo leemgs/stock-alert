@@ -16,7 +16,7 @@
 
 ---
 
-## 🚀 주요 기능
+## 1. 🚀 주요 기능
 
 | 기능                     | 설명                                                   |
 | ---------------------- | ---------------------------------------------------- |
@@ -31,7 +31,7 @@
 
 ---
 
-## 📦 프로젝트 구조
+## 2. 📦 프로젝트 구조
 
 ```
 stock-alert/
@@ -52,7 +52,7 @@ stock-alert/
 
 ---
 
-## ⚙️ 설치 및 실행 (로컬 / 서버 환경)
+## 3. ⚙️ 설치 및 실행 (로컬 / 서버 환경)
 
 ```bash
 # 1. 저장소 클론 및 이동
@@ -79,7 +79,7 @@ python src/multi_stock_alert.py
 
 ---
 
-## 📄 예시 설정
+## 4. 📄 예시 설정
 
 ### `stock.txt`
 
@@ -101,7 +101,7 @@ loc, company_name, ticker, price_down, price_up
 
 ---
 
-## ☁️ GitHub Actions 서버리스 자동화
+## 5. ☁️ GitHub Actions 서버리스 자동화
 
 이 프로젝트는 별도 서버 없이 GitHub Actions로 자동 실행할 수 있습니다.
 레포에 포함된 워크플로 파일:
@@ -146,18 +146,18 @@ loc, company_name, ticker, price_down, price_up
 
 ```bash
 # 수동 트리거
-gh workflow run "Stock Alerts (1-hour)"
-gh workflow run "Weekly Stock Report"
+gh workflow run "Daily Stock Report (1-hour)"
+gh workflow run "Weekly Stock Report (Saturday 9 AM)"
 ```
 
 ### 3️⃣ 실행 주기 (UTC 기준)
 
 * 알림: `0 */1 * * *` → 1시간마다
-* 리포트: `0 9 * * 0` → 일요일 18:00 (KST)
+* 리포트: `0 0 * * 6` → 매주 토요일 09:00 (KST)
 
 ---
 
-## 🔄 임계값 자동 업데이트 및 깃허브 반영
+## 6. 🔄 임계값 자동 업데이트 및 깃허브 반영
 
 알림이 발생하면 다음 단계의 모니터링을 위해 임계값이 자동으로 조정됩니다.
 
@@ -170,7 +170,7 @@ gh workflow run "Weekly Stock Report"
 
 ---
 
-## 📊 알림 예시
+## 7. 📊 알림 예시
 
 ### 이메일 (Premium HTML)
 
@@ -199,7 +199,7 @@ Subject: [Stock Alert] 임계 도달 종목 (상/하한)
 
 ---
 
-## 📆 주간 리포트 예시 (Premium HTML)
+## 8. 📆 주간 리포트 예시 (Premium HTML)
 
 주간 리포트는 한눈에 들어오는 요약 표와 통계 그리드를 제공합니다.
 
@@ -212,12 +212,12 @@ Subject: [Stock Alert] 임계 도달 종목 (상/하한)
 
 ---
 
-## 🧩 GitHub Actions YAML
+## 9. 🧩 GitHub Actions YAML
 
 | 파일명                            | 설명                                          |
 | ------------------------------ | ------------------------------------------- |
-| `.github/workflows/stock-alert-cached.yml` | 1시간마다 주식 가격 알림 실행                           |
-| `.github/workflows/weekly.yml` | 매주 일요일 18시(KST) 주간 리포트 생성                   |
+| `.github/workflows/stock-daily-report.yml` | 1시간마다 주식 가격 알림 실행                           |
+| `.github/workflows/stock-weekly-report.yml` | 매주 토요일 09시(KST) 주간 리포트 생성                   |
 | **GitHub Secrets**             | 민감정보(SMTP, Slack Webhook 등)는 Secrets를 통해 주입 |
 
 > Actions 러너는 매 실행마다 초기화되므로,
@@ -225,7 +225,7 @@ Subject: [Stock Alert] 임계 도달 종목 (상/하한)
 
 ---
 
-## 사용 상황별 추천
+## 10. 사용 상황별 추천
 
 * 히스토리컬 주가(일별)만 필요할 때 → yfinance 혹은 pandas-datareader
 * 실시간 혹은 분단위 데이터 + 기술지표까지 필요할 때 → alpha_vantage
@@ -234,13 +234,13 @@ Subject: [Stock Alert] 임계 도달 종목 (상/하한)
 
 
 
-## 🧠 Credits
+## 11. 🧠 Credits
 
 * Developed by [Geunsik Lim](https://github.com/leemgs)
 * Powered by **Python 3.11 + GitHub Actions + Yahoo Finance API**
 
 
-## Reference
+## 12. Reference
 * https://comp.wisereport.co.kr/company/c1070001.aspx?cmp_cd=005930&cn (삼성 임원 주식 보유현황)
 * https://pypi.org/project/yfinance/ (Yahoo Finance 파이썬 라이브러리)
   - Ticker (22310.KQ)으로 조회 - https://finance.yahoo.com/quote/223310.KQ/
