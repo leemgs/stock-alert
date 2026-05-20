@@ -5,7 +5,7 @@
 
 **자동 주식 임계가(상한/하한) 감시 및 이메일·Slack 알림 시스템**
 
-![Stock Alert Preview](img/gmail-stock-alert.jpg)
+<img src="img/gmail-stock-alert.jpg" alt="Stock Alert Preview" width="600" />
 
 본 프로젝트는
 
@@ -181,7 +181,7 @@ gh workflow run "Weekly Stock Report"
 - **하한 돌파**: 신중한 파란색 카드로 강조
 - **반응형 디자인**: 모바일 및 데스크톱 이메일 클라이언트 최적화
 
-![Stock Alert Email Screenshot](img/screenshot.png)
+<img src="img/screenshot.png" alt="Stock Alert Email Screenshot" width="600" />
 
 ```text
 Subject: [Stock Alert] 임계 도달 종목 (상/하한)
