@@ -55,21 +55,26 @@ stock-alert/
 ## ⚙️ 설치 및 실행 (로컬 / 서버 환경)
 
 ```bash
-# 1. 의존성 설치
+# 1. 저장소 클론 및 이동
+cd /opt/
+git clone https://github.com/leemgs/stock-alert.git
+cd stock-alert
+
+# 2. 의존성 설치
 pip install -r requirements.txt
 
-# 2. 주식 임계값 파일 작성
+# 3. 주식 임계값 파일 작성
 vi data/stock.txt
 
-# 3. 환경 변수 세팅 후 테스트 실행
+# 4. 환경 변수 세팅 후 테스트 실행
 export SMTP_HOST=smtp.gmail.com
 export SMTP_USER=your_email@gmail.com
 export SMTP_PASS=your_app_password
 export EMAIL_TO=you@company.com
 python src/multi_stock_alert.py
 
-# 4. 크론 등록 (1시간마다)
-0 */1 * * * /opt/stock_alert/run.sh
+# 5. 크론 등록 (1시간마다)
+0 */1 * * * /opt/stock-alert/src/run.sh
 ```
 
 ---
