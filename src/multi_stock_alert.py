@@ -51,8 +51,8 @@ def load_kv(path: Path) -> dict:
             
     # 환경변수 우선 병합 (config.txt가 없더라도 작동하도록 지원)
     for k, v in os.environ.items():
-        if k not in kv:
-            kv[k] = v
+        if k not in kv and v.strip() != "":
+            kv[k] = v.strip()
             
     return kv
 
