@@ -1,1 +1,4 @@
 .env
+
+data/history.json
+data/state.json
