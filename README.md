@@ -107,42 +107,41 @@ loc, company_name, ticker, price_down, price_up
 레포에 포함된 워크플로 파일:
 
 * `.github/workflows/alerts.yml` → **1시간마다 자동 알림**
-* `.github/workflows/weekly.yml` → **매주 일요일 18:00 KST 주간 리포트**
 
 ### 1️⃣ Secrets 및 Variables 등록 (Settings → Secrets and variables → Actions)
 
 보안이 필요한 암호화된 정보는 **Secrets**에, 그 외의 일반적인 설정 정보는 **Variables**에 등록하는 것을 권장합니다. (단, 기존처럼 모두 Secrets에 등록해도 무방합니다.)
 
 #### 🔒 Repository Secrets (보안 정보)
-| Key | 기본값(Default) | 설명 |
-| --- | --- | --- |
-| `SMTP_PASS` | (없음, 필수) | 이메일 발송용 SMTP 앱 비밀번호 |
-| `SLACK_WEBHOOK_URL` | (없음) | 단일 채널 사용 시 Slack 웹훅 URL |
-| `SLACK_WEBHOOK_DOWN` | (없음) | 하한 돌파 전용 Slack 웹훅 URL (`SLACK_SPLIT_CHANNELS=true` 시) |
-| `SLACK_WEBHOOK_UP` | (없음) | 상한 돌파 전용 Slack 웹훅 URL (`SLACK_SPLIT_CHANNELS=true` 시) |
-| `SLACK_WEBHOOK_REPORT` | (없음) | 주간 리포트 전송용 웹훅 URL |
+| Key | 필수여부 | 기본값(Default) | 설명 |
+| --- | --- | --- | --- |
+| `SMTP_PASS` | 필수 | (없음) | 이메일 발송용 SMTP 앱 비밀번호 |
+| `SLACK_WEBHOOK_URL` | 선택 | (없음) | 단일 채널 사용 시 Slack 웹훅 URL |
+| `SLACK_WEBHOOK_DOWN` | 선택 | (없음) | 하한 돌파 전용 Slack 웹훅 URL (`SLACK_SPLIT_CHANNELS=true` 시) |
+| `SLACK_WEBHOOK_UP` | 선택 | (없음) | 상한 돌파 전용 Slack 웹훅 URL (`SLACK_SPLIT_CHANNELS=true` 시) |
+| `SLACK_WEBHOOK_REPORT` | 선택 | (없음) | 주간 리포트 전송용 웹훅 URL |
 
 #### ⚙️ Repository Variables (일반 설정 정보)
-| Key | 기본값(Default) | 설명 |
-| --- | --- | --- |
-| `SMTP_HOST` | (없음, 필수) | 발송용 이메일 서버 (예: `smtp.gmail.com`) |
-| `SMTP_PORT` | `587` | 발송용 이메일 포트 번호 |
-| `SMTP_USER` | (없음, 필수) | 발송용 이메일 계정 ID |
-| `EMAIL_FROM` | `SMTP_USER`와 동일 | 알림 발신자 주소 |
-| `EMAIL_TO` | `root@localhost` | 알림 수신자 주소 |
-| `SLACK_ENABLE` | `false` | Slack 알림 활성화 여부 (`true`/`false`) |
-| `SLACK_SPLIT_CHANNELS` | `false` | 상/하한 채널 분리 여부 (`true`/`false`) |
-| `UPDATE_THRESHOLD_DOWN_PERCENT`| `10` | 하한가 자동 하향 폭 (%) |
-| `UPDATE_THRESHOLD_UP_PERCENT` | `10` | 상한가 자동 상향 폭 (%) |
-| `ALERT_RATE_LIMIT_PER_TICKER_PER_DAY` | `2` | 1일 1종목 최대 알림 발생 제한 횟수 |
-| `ALERT_MIN_INTERVAL_MINUTES` | `60` | 동일 종목 최소 알림 간격 (분) |
-| `ALERT_GLOBAL_DAILY_CAP` | `100` | 전체 종목 합산 1일 최대 알림 횟수 |
-| `ACTIVE_WINDOW_ENABLE` | `false` | 장중 특정 시간대에만 동작 여부 (`true`/`false`) |
-| `ACTIVE_START` | `00:00` | 활성 시작 시간 (`HH:MM`) |
-| `ACTIVE_END` | `23:59` | 활성 종료 시간 (`HH:MM`) |
-| `ACTIVE_BUSINESS_DAYS_ONLY` | `true` | 평일(월~금)에만 알림 활성화 여부 (`true`/`false`) |
-| `WEEKLY_REPORT_ENABLE` | `false` | 주간 리포트 활성화 여부 (`true`/`false`) |
-| `WEEKLY_REPORT_WHEN` | `6,18:00` | 주간 리포트 발송 요일 및 시간 (일요일 18시) |
+| Key | 필수여부 | 기본값(Default) | 설명 |
+| --- | --- | --- | --- |
+| `SMTP_HOST` | 필수 | (없음) | 발송용 이메일 서버 (예: `smtp.gmail.com`) |
+| `SMTP_PORT` | 선택 | `587` | 발송용 이메일 포트 번호 |
+| `SMTP_USER` | 필수 | (없음) | 발송용 이메일 계정 ID |
+| `EMAIL_FROM` | 선택 | `SMTP_USER`와 동일 | 알림 발신자 주소 |
+| `EMAIL_TO` | 선택 | `root@localhost` | 알림 수신자 주소 |
+| `SLACK_ENABLE` | 선택 | `false` | Slack 알림 활성화 여부 (`true`/`false`) |
+| `SLACK_SPLIT_CHANNELS` | 선택 | `false` | 상/하한 채널 분리 여부 (`true`/`false`) |
+| `UPDATE_THRESHOLD_DOWN_PERCENT`| 선택 | `10` | 하한가 자동 하향 폭 (%) |
+| `UPDATE_THRESHOLD_UP_PERCENT` | 선택 | `10` | 상한가 자동 상향 폭 (%) |
+| `ALERT_RATE_LIMIT_PER_TICKER_PER_DAY` | 선택 | `2` | 1일 1종목 최대 알림 발생 제한 횟수 |
+| `ALERT_MIN_INTERVAL_MINUTES` | 선택 | `60` | 동일 종목 최소 알림 간격 (분) |
+| `ALERT_GLOBAL_DAILY_CAP` | 선택 | `100` | 전체 종목 합산 1일 최대 알림 횟수 |
+| `ACTIVE_WINDOW_ENABLE` | 선택 | `false` | 장중 특정 시간대에만 동작 여부 (`true`/`false`) |
+| `ACTIVE_START` | 선택 | `00:00` | 활성 시작 시간 (`HH:MM`) |
+| `ACTIVE_END` | 선택 | `23:59` | 활성 종료 시간 (`HH:MM`) |
+| `ACTIVE_BUSINESS_DAYS_ONLY` | 선택 | `true` | 평일(월~금)에만 알림 활성화 여부 (`true`/`false`) |
+| `WEEKLY_REPORT_ENABLE` | 선택 | `false` | 주간 리포트 활성화 여부 (`true`/`false`) |
+| `WEEKLY_REPORT_WHEN` | 선택 | `6,18:00` | 주간 리포트 발송 요일 및 시간 (일요일 18시) |
 
 
 ### 2️⃣ 워크플로 실행 확인
