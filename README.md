@@ -46,7 +46,7 @@ stock-alert/
 │   └── run.sh
 └── .github/
     └── workflows/
-        ├── alerts.yml     # 2시간마다 자동 알림
+        ├── stock-daily-report.yml     # 1시간마다 자동 알림
         └── stock-weekly-report.yml # 주간 리포트 (매주 토요일 9시)
 ```
 
@@ -106,7 +106,7 @@ loc, company_name, ticker, price_down, price_up
 이 프로젝트는 별도 서버 없이 GitHub Actions로 자동 실행할 수 있습니다.
 레포에 포함된 워크플로 파일:
 
-* `.github/workflows/alerts.yml` → **1시간마다 자동 알림**
+* `.github/workflows/stock-daily-report.yml` → **1시간마다 자동 알림 (상/하한 돌파)**
 * `.github/workflows/stock-weekly-report.yml` → **매주 토요일 09:00 KST 주간 동향 리포트**
 
 ### 1️⃣ Secrets 및 Variables 등록 (Settings → Secrets and variables → Actions)
