@@ -88,36 +88,11 @@ loc, company_name, ticker, price_down, price_up
 
 ### 환경 변수 (Environment Variables)
 
-기존 `config.txt` 대신 **환경 변수**를 통해 설정을 주입합니다. 로컬 실행 시에는 `export`로, GitHub Actions 실행 시에는 **Repository Secrets/Variables**에 등록하여 사용하세요.
+기존 `config.txt` 대신 **환경 변수**를 통해 설정을 주입합니다.
+로컬 실행 시에는 `.env.example` 파일을 참고하여 `export`로 환경 변수를 적용하시고, GitHub Actions 실행 시에는 **Repository Secrets/Variables**에 등록하여 사용하세요.
 *(https://github.com/leemgs/stock-alert/settings/secrets/actions 참고)*
 
-```bash
-# [필수] 이메일 알림 설정
-export SMTP_HOST="smtp.gmail.com"
-export SMTP_USER="your_email@gmail.com"
-export SMTP_PASS="your_app_password"
-export EMAIL_TO="you@company.com"
-
-# [선택] Slack 알림 (주석 해제 후 사용)
-# export SLACK_ENABLE="true"
-# export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/XXX/YYY/ZZZ"
-
-# ---------------------------------------------------------
-# [고급 설정] (기본값이 적용되며 필요시 설정)
-# ---------------------------------------------------------
-# 임계값 자동 변경 폭 (%)
-# export UPDATE_THRESHOLD_DOWN_PERCENT="10"
-# export UPDATE_THRESHOLD_UP_PERCENT="10"
-# 
-# 장중 활성화 여부
-# export ACTIVE_WINDOW_ENABLE="false"
-# export ACTIVE_START="09:00"
-# export ACTIVE_END="15:30"
-# 
-# 시스템 설정
-# export ALERT_RATE_LIMIT_PER_TICKER_PER_DAY="2"
-# export ALERT_MIN_INTERVAL_MINUTES="60"
-```
+자세한 환경 변수 목록과 설명은 [`.env.example`](.env.example) 파일을 확인해 주세요.
 
 ---
 
