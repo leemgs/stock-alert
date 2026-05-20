@@ -40,37 +40,32 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Prepare runtime folder
-        run: |
-          sudo mkdir -p /opt/stock_alert
-          sudo chown $USER:$USER /opt/stock_alert
-          cp -r src/* /opt/stock_alert/
-          cp examples/stock.txt /opt/stock_alert/stock.txt
+
 
       - name: Build config from secrets
         env:
-          SMTP_HOST: ${{ secrets.SMTP_HOST }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-          EMAIL_TO: ${{ secrets.EMAIL_TO }}
-          SLACK_ENABLE: ${{ secrets.SLACK_ENABLE }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_SPLIT_CHANNELS: ${{ secrets.SLACK_SPLIT_CHANNELS }}
-          SLACK_WEBHOOK_DOWN: ${{ secrets.SLACK_WEBHOOK_DOWN }}
-          SLACK_WEBHOOK_UP: ${{ secrets.SLACK_WEBHOOK_UP }}
-          SLACK_WEBHOOK_REPORT: ${{ secrets.SLACK_WEBHOOK_REPORT }}
-          TZV: ${{ secrets.TZ }}
-          ACTIVE_WINDOW_ENABLE: ${{ secrets.ACTIVE_WINDOW_ENABLE }}
-          ACTIVE_START: ${{ secrets.ACTIVE_START }}
-          ACTIVE_END: ${{ secrets.ACTIVE_END }}
-          ACTIVE_BUSINESS_DAYS_ONLY: ${{ secrets.ACTIVE_BUSINESS_DAYS_ONLY }}
-          ALERT_RATE_LIMIT_PER_TICKER_PER_DAY: ${{ secrets.ALERT_RATE_LIMIT_PER_TICKER_PER_DAY }}
-          ALERT_MIN_INTERVAL_MINUTES: ${{ secrets.ALERT_MIN_INTERVAL_MINUTES }}
-          ALERT_GLOBAL_DAILY_CAP: ${{ secrets.ALERT_GLOBAL_DAILY_CAP }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST || vars.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT || vars.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER || vars.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS || vars.SMTP_PASS }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM || vars.EMAIL_FROM }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO || vars.EMAIL_TO }}
+          SLACK_ENABLE: ${{ secrets.SLACK_ENABLE || vars.SLACK_ENABLE }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+          SLACK_SPLIT_CHANNELS: ${{ secrets.SLACK_SPLIT_CHANNELS || vars.SLACK_SPLIT_CHANNELS }}
+          SLACK_WEBHOOK_DOWN: ${{ secrets.SLACK_WEBHOOK_DOWN || vars.SLACK_WEBHOOK_DOWN }}
+          SLACK_WEBHOOK_UP: ${{ secrets.SLACK_WEBHOOK_UP || vars.SLACK_WEBHOOK_UP }}
+          SLACK_WEBHOOK_REPORT: ${{ secrets.SLACK_WEBHOOK_REPORT || vars.SLACK_WEBHOOK_REPORT }}
+          TZV: ${{ secrets.TZ || vars.TZ }}
+          ACTIVE_WINDOW_ENABLE: ${{ secrets.ACTIVE_WINDOW_ENABLE || vars.ACTIVE_WINDOW_ENABLE }}
+          ACTIVE_START: ${{ secrets.ACTIVE_START || vars.ACTIVE_START }}
+          ACTIVE_END: ${{ secrets.ACTIVE_END || vars.ACTIVE_END }}
+          ACTIVE_BUSINESS_DAYS_ONLY: ${{ secrets.ACTIVE_BUSINESS_DAYS_ONLY || vars.ACTIVE_BUSINESS_DAYS_ONLY }}
+          ALERT_RATE_LIMIT_PER_TICKER_PER_DAY: ${{ secrets.ALERT_RATE_LIMIT_PER_TICKER_PER_DAY || vars.ALERT_RATE_LIMIT_PER_TICKER_PER_DAY }}
+          ALERT_MIN_INTERVAL_MINUTES: ${{ secrets.ALERT_MIN_INTERVAL_MINUTES || vars.ALERT_MIN_INTERVAL_MINUTES }}
+          ALERT_GLOBAL_DAILY_CAP: ${{ secrets.ALERT_GLOBAL_DAILY_CAP || vars.ALERT_GLOBAL_DAILY_CAP }}
         run: |
-          cat > /opt/stock_alert/config.txt <<EOF
+          cat > data/config.txt <<EOF
           SMTP_HOST=${SMTP_HOST}
           SMTP_PORT=${SMTP_PORT}
           SMTP_USER=${SMTP_USER}
@@ -107,37 +102,21 @@ jobs:
           WEEKLY_REPORT_WHEN=6,18:00
           EOF
 
-      - name: Sync history.json into runtime
-        run: |
-          mkdir -p /opt/stock_alert/data
-          cp -f data/history.json /opt/stock_alert/data/history.json || true
-
       - name: Run alerts
         run: |
-          python /opt/stock_alert/multi_stock_alert.py
-
-      - name: Sync history.json back to repo
-        if: always()
-        run: |
-          if [ -f /opt/stock_alert/data/history.json ]; then
-            mkdir -p data
-            cp -f /opt/stock_alert/data/history.json data/history.json
-          fi
+          python src/multi_stock_alert.py
 
       - name: Sync stock.txt back and commit
         if: always()
         run: |
-          if [ -f /opt/stock_alert/stock.txt ]; then
-            cp -f /opt/stock_alert/stock.txt examples/stock.txt
-            if ! git diff --quiet examples/stock.txt; then
-              git config --local user.email "action@github.com"
-              git config --local user.name "GitHub Action"
-              git add examples/stock.txt
-              git commit -m "[Stock Alert] Update thresholds (+/- 10%)"
-              git push
-            else
-              echo "No changes in stock.txt"
-            fi
+          if ! git diff --quiet data/stock.txt; then
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git add data/stock.txt
+            git commit -m "[Stock Alert] Update thresholds (+/- 10%)"
+            git push
+          else
+            echo "No changes in stock.txt"
           fi
 
       - name: Save history.json cache

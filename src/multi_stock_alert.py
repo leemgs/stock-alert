@@ -22,7 +22,9 @@ import pytz
 import requests
 
 # ---------- Paths / Constants ----------
-BASE = Path("/opt/stock_alert")
+# 기본 경로는 스크립트 위치 기준 상위 디렉토리의 data 폴더로 설정 (환경변수로 오버라이드 가능)
+BASE_DIR = Path(__file__).resolve().parent.parent
+BASE = Path(os.getenv("STOCK_ALERT_BASE", BASE_DIR / "data"))
 CONFIG_PATH = BASE / "config.txt"
 STOCKS_PATH = BASE / "stock.txt"
 STATE_PATH  = BASE / "state.json"
@@ -83,6 +85,9 @@ def load_config(path: Path)->dict:
     # HISTORY_MODE in {"auto","on","off"}
     c.setdefault("HISTORY_MODE", "auto")
 
+    c.setdefault("UPDATE_THRESHOLD_DOWN_PERCENT", "10")
+    c.setdefault("UPDATE_THRESHOLD_UP_PERCENT", "10")
+    
     # types
     c["SMTP_PORT"]=int(c["SMTP_PORT"])
     c["DAILY_DEDUP"]=c["DAILY_DEDUP"].lower()=="true"
@@ -95,6 +100,9 @@ def load_config(path: Path)->dict:
     c["ALERT_RATE_LIMIT_PER_TICKER_PER_DAY"]=int(c["ALERT_RATE_LIMIT_PER_TICKER_PER_DAY"])
     c["ALERT_MIN_INTERVAL_MINUTES"]=int(c["ALERT_MIN_INTERVAL_MINUTES"])
     c["ALERT_GLOBAL_DAILY_CAP"]=int(c["ALERT_GLOBAL_DAILY_CAP"])
+    c["UPDATE_THRESHOLD_DOWN_PERCENT"]=float(c["UPDATE_THRESHOLD_DOWN_PERCENT"])
+    c["UPDATE_THRESHOLD_UP_PERCENT"]=float(c["UPDATE_THRESHOLD_UP_PERCENT"])
+    
     c["INFO_TYPE"]=c["INFO_TYPE"].lower().strip()
     if c["INFO_TYPE"] not in {"fast_info","info"}:
         c["INFO_TYPE"] = "info"
@@ -263,7 +271,7 @@ def send_email(cfg, subj, body, subtype="plain"):
         s.ehlo(); s.starttls(context=ctx); s.login(cfg["SMTP_USER"], cfg["SMTP_PASS"])
         s.sendmail(cfg["EMAIL_FROM"], [cfg["EMAIL_TO"]], msg.as_string())
 
-def generate_html_body(ts_str, down_breaches, up_breaches, errors, rate_limited_notes):
+def generate_html_body(cfg, ts_str, down_breaches, up_breaches, errors, rate_limited_notes):
     """
     Generates a premium HTML body for the stock alert email.
     """
@@ -296,27 +304,31 @@ def generate_html_body(ts_str, down_breaches, up_breaches, errors, rate_limited_
 
     # Build Sections
     down_html = ""
+    down_pct = cfg.get("UPDATE_THRESHOLD_DOWN_PERCENT", 10)
     if down_breaches:
         down_html = '<div class="section-title down-title">📉 하한 돌파 (현재가 ≤ 하한)</div>'
-        for n, t, p, th in down_breaches:
+        for n, t, p, th, nth in down_breaches:
             down_html += f"""
             <div class="alert-card">
                 <div class="ticker">{n} <span style="color:#7f8c8d; font-weight:normal;">({t})</span></div>
                 <div class="price-info">
-                    현재가 <span class="price-value" style="color:#3498db;">{p:.2f}</span> ≤ 하한가 <span class="price-value">{th:.2f}</span>
+                    변경전:현재가 <span class="price-value" style="color:#3498db;">{p:.2f}</span> ≤ 하한가 <span class="price-value">{th:.2f}</span><br>
+                    변경후:현재가 <span class="price-value" style="color:#3498db;">{p:.2f}</span> ≤ 하한가 <span class="price-value">{th:.2f}</span> (하한가 {down_pct:g}% 하향:{nth:.2f})
                 </div>
             </div>
             """
 
+    up_pct = cfg.get("UPDATE_THRESHOLD_UP_PERCENT", 10)
     up_html = ""
     if up_breaches:
         up_html = '<div class="section-title up-title">📈 상한 돌파 (현재가 ≥ 상한)</div>'
-        for n, t, p, th in up_breaches:
+        for n, t, p, th, nth in up_breaches:
             up_html += f"""
             <div class="alert-card">
                 <div class="ticker">{n} <span style="color:#7f8c8d; font-weight:normal;">({t})</span></div>
                 <div class="price-info">
-                    현재가 <span class="price-value" style="color:#e74c3c;">{p:.2f}</span> ≥ 상한가 <span class="price-value">{th:.2f}</span>
+                    변경전:현재가 <span class="price-value" style="color:#e74c3c;">{p:.2f}</span> ≥ 상한가 <span class="price-value">{th:.2f}</span><br>
+                    변경후:현재가 <span class="price-value" style="color:#e74c3c;">{p:.2f}</span> ≥ 상한가 <span class="price-value">{th:.2f}</span> (상한가 {up_pct:g}% 상향:{nth:.2f})
                 </div>
             </div>
             """
@@ -386,20 +398,22 @@ def send_slack_split(cfg, ts_str, down_breaches, up_breaches, errors):
     username=cfg.get("SLACK_USERNAME","Stock-Alert-Bot")
     icon=cfg.get("SLACK_ICON_EMOJI",":bar_chart:")
 
+    down_pct = cfg.get("UPDATE_THRESHOLD_DOWN_PERCENT", 10)
     if down_breaches:
         url = cfg.get("SLACK_WEBHOOK_DOWN") or cfg.get("SLACK_WEBHOOK_URL")
         if url:
-            rows=[f"- *{n}* `{t}`: `{p:.2f}` ≤ `{th:.2f}`" for n,t,p,th in down_breaches]
+            rows=[f"- *{n}* `{t}`: 변경전 `{p:.2f}` ≤ `{th:.2f}` -> 변경후 하한가 {down_pct:g}% 하향 `{nth:.2f}`" for n,t,p,th,nth in down_breaches]
             blocks = slack_blocks_header(ts_str) +                      slack_blocks_section(":small_red_triangle_down: 하한 돌파 (현재가 ≤ 하한)", rows)
             if errors:
                 blocks.append({"type":"divider"})
                 blocks += slack_blocks_section("_(참고) 조회 오류_", [f"- {e}" for e in errors])
             post_slack(url, username, icon, blocks)
 
+    up_pct = cfg.get("UPDATE_THRESHOLD_UP_PERCENT", 10)
     if up_breaches:
         url = cfg.get("SLACK_WEBHOOK_UP") or cfg.get("SLACK_WEBHOOK_URL")
         if url:
-            rows=[f"- *{n}* `{t}`: `{p:.2f}` ≥ `{th:.2f}`" for n,t,p,th in up_breaches]
+            rows=[f"- *{n}* `{t}`: 변경전 `{p:.2f}` ≥ `{th:.2f}` -> 변경후 상한가 {up_pct:g}% 상향 `{nth:.2f}`" for n,t,p,th,nth in up_breaches]
             blocks = slack_blocks_header(ts_str) +                      slack_blocks_section(":small_red_triangle: 상한 돌파 (현재가 ≥ 상한)", rows)
             if errors and not down_breaches:
                 blocks.append({"type":"divider"})
@@ -482,13 +496,14 @@ def main():
                 if alert:
                     can, why = rl_can_send(cfg, state, cfg["TZ"], tkr, "down", ts)
                     if can:
-                        down_breaches.append((s["name"], tkr, price, dth))
+                        # [Mission] Update threshold
+                        down_pct = cfg["UPDATE_THRESHOLD_DOWN_PERCENT"]
+                        new_val = dth * (1.0 - (down_pct / 100.0))
+                        down_breaches.append((s["name"], tkr, price, dth, new_val))
                         state["last_alert_date"][f"{tkr}|down"]=today
                         rl_commit(state, tkr, "down", ts)
                         new_events.append({"ts":ts_str,"dir":"down","name":s["name"],"ticker":tkr,"price":price,"threshold":dth})
                         
-                        # [Mission] Update threshold: -10%
-                        new_val = dth * 0.9
                         if tkr not in updates: updates[tkr] = {}
                         updates[tkr]['down'] = new_val
                     else:
@@ -507,13 +522,14 @@ def main():
                 if alert:
                     can, why = rl_can_send(cfg, state, cfg["TZ"], tkr, "up", ts)
                     if can:
-                        up_breaches.append((s["name"], tkr, price, uth))
+                        # [Mission] Update threshold
+                        up_pct = cfg["UPDATE_THRESHOLD_UP_PERCENT"]
+                        new_val = uth * (1.0 + (up_pct / 100.0))
+                        up_breaches.append((s["name"], tkr, price, uth, new_val))
                         state["last_alert_date"][f"{tkr}|up"]=today
                         rl_commit(state, tkr, "up", ts)
                         new_events.append({"ts":ts_str,"dir":"up","name":s["name"],"ticker":tkr,"price":price,"threshold":uth})
                         
-                        # [Mission] Update threshold: +10%
-                        new_val = uth * 1.1
                         if tkr not in updates: updates[tkr] = {}
                         updates[tkr]['up'] = new_val
                     else:
@@ -526,7 +542,7 @@ def main():
 
     if down_breaches or up_breaches:
         # Generate HTML Body
-        html_body = generate_html_body(ts_str, down_breaches, up_breaches, errors, rate_limited_notes)
+        html_body = generate_html_body(cfg, ts_str, down_breaches, up_breaches, errors, rate_limited_notes)
         
         try:
             send_email(cfg, "[Stock Alert] 임계 도달 종목 (상/하한)", html_body, subtype="html")
@@ -541,10 +557,12 @@ def main():
                 url = cfg.get("SLACK_WEBHOOK_URL")
                 if url:
                     rows=[]
+                    down_pct = cfg.get("UPDATE_THRESHOLD_DOWN_PERCENT", 10)
+                    up_pct = cfg.get("UPDATE_THRESHOLD_UP_PERCENT", 10)
                     if down_breaches:
-                        rows += [f"- *{n}* `{t}`: `{p:.2f}` ≤ `{th:.2f}`" for n,t,p,th in down_breaches]
+                        rows += [f"- *{n}* `{t}`: 변경전 `{p:.2f}` ≤ `{th:.2f}` -> 변경후 하한가 {down_pct:g}% 하향 `{nth:.2f}`" for n,t,p,th,nth in down_breaches]
                     if up_breaches:
-                        rows += [f"- *{n}* `{t}`: `{p:.2f}` ≥ `{th:.2f}`" for n,t,p,th in up_breaches]
+                        rows += [f"- *{n}* `{t}`: 변경전 `{p:.2f}` ≥ `{th:.2f}` -> 변경후 상한가 {up_pct:g}% 상향 `{nth:.2f}`" for n,t,p,th,nth in up_breaches]
                     blocks = slack_blocks_header(ts_str) +                              slack_blocks_section("임계 도달 종목 (상/하한)", rows)
                     if errors or rate_limited_notes:
                         blocks.append({"type":"divider"})

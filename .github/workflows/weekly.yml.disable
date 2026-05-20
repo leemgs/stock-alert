@@ -30,19 +30,19 @@ jobs:
 
       - name: Build config from secrets
         env:
-          SMTP_HOST: ${{ secrets.SMTP_HOST }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-          EMAIL_TO: ${{ secrets.EMAIL_TO }}
-          SLACK_ENABLE: ${{ secrets.SLACK_ENABLE }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_SPLIT_CHANNELS: ${{ secrets.SLACK_SPLIT_CHANNELS }}
-          SLACK_WEBHOOK_DOWN: ${{ secrets.SLACK_WEBHOOK_DOWN }}
-          SLACK_WEBHOOK_UP: ${{ secrets.SLACK_WEBHOOK_UP }}
-          SLACK_WEBHOOK_REPORT: ${{ secrets.SLACK_WEBHOOK_REPORT }}
-          TZV: ${{ secrets.TZ }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST || vars.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT || vars.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER || vars.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS || vars.SMTP_PASS }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM || vars.EMAIL_FROM }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO || vars.EMAIL_TO }}
+          SLACK_ENABLE: ${{ secrets.SLACK_ENABLE || vars.SLACK_ENABLE }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+          SLACK_SPLIT_CHANNELS: ${{ secrets.SLACK_SPLIT_CHANNELS || vars.SLACK_SPLIT_CHANNELS }}
+          SLACK_WEBHOOK_DOWN: ${{ secrets.SLACK_WEBHOOK_DOWN || vars.SLACK_WEBHOOK_DOWN }}
+          SLACK_WEBHOOK_UP: ${{ secrets.SLACK_WEBHOOK_UP || vars.SLACK_WEBHOOK_UP }}
+          SLACK_WEBHOOK_REPORT: ${{ secrets.SLACK_WEBHOOK_REPORT || vars.SLACK_WEBHOOK_REPORT }}
+          TZV: ${{ secrets.TZ || vars.TZ }}
         run: |
           cat > /opt/stock_alert/config.txt <<EOF
           SMTP_HOST=${SMTP_HOST}

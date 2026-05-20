@@ -38,7 +38,7 @@ stock-alert/
 ├── LICENSE
 ├── README.md
 ├── requirements.txt
-├── examples/
+├── data/
 │   ├── config.txt
 │   └── stock.txt
 ├── src/
@@ -120,17 +120,29 @@ ACTIVE_END=15:30
 * `.github/workflows/alerts.yml` → **1시간마다 자동 알림**
 * `.github/workflows/weekly.yml` → **매주 일요일 18:00 KST 주간 리포트**
 
-### 1️⃣ Secrets 등록 (Settings → Secrets → Actions)
+### 1️⃣ Secrets 및 Variables 등록 (Settings → Secrets and variables → Actions)
 
+보안이 필요한 암호화된 정보는 **Secrets**에, 그 외의 일반적인 설정 정보는 **Variables**에 등록하는 것을 권장합니다. (단, 기존처럼 모두 Secrets에 등록해도 무방합니다.)
+
+#### 🔒 Repository Secrets (보안 정보)
+| Key                                        | 설명                      |
+| ------------------------------------------ | ------------------------- |
+| SMTP_PASS                                  | 이메일 발송용 SMTP 비밀번호 |
+| SLACK_WEBHOOK_URL                          | Slack 웹훅 URL            |
+| SLACK_WEBHOOK_DOWN, SLACK_WEBHOOK_UP       | Slack 분기 채널 웹훅 URL   |
+| SLACK_WEBHOOK_REPORT                       | Slack 리포트 전송용 웹훅 URL|
+
+
+
+#### ⚙️ Repository Variables (일반 설정 정보)
 | Key                                                             | 설명                   |
 | --------------------------------------------------------------- | -------------------- |
-| SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS                      | 이메일 발송용 SMTP 설정      |
+| SMTP_HOST, SMTP_PORT, SMTP_USER                                 | 이메일 발송용 SMTP 설정      |
 | EMAIL_FROM, EMAIL_TO                                            | 발신자/수신자 이메일          |
-| SLACK_ENABLE, SLACK_WEBHOOK_URL                                 | Slack 사용 여부 및 웹훅 URL |
-| SLACK_SPLIT_CHANNELS, SLACK_WEBHOOK_DOWN, SLACK_WEBHOOK_UP      | 상승/하락 채널 분리 설정       |
-| SLACK_WEBHOOK_REPORT                                            | 주간 리포트 전송용           |
+| SLACK_ENABLE, SLACK_SPLIT_CHANNELS                              | Slack 사용 여부 및 채널 분리 |
 | ALERT_RATE_LIMIT_PER_TICKER_PER_DAY, ALERT_MIN_INTERVAL_MINUTES | 알림 rate-limit 제어     |
 | TZ, ACTIVE_WINDOW_ENABLE, ACTIVE_START, ACTIVE_END              | 시간대 및 장중 필터          |
+
 
 ### 2️⃣ 워크플로 실행 확인
 

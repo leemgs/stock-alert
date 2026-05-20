@@ -1,0 +1,36 @@
+# SMTP Configuration
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_app_password
+EMAIL_FROM="Stock Alert <your_email@gmail.com>"
+EMAIL_TO="you@company.com"
+
+# Global Timezone
+TZ=Asia/Seoul
+
+# Slack Integration (Split Channels)
+SLACK_ENABLE=true
+SLACK_SPLIT_CHANNELS=true
+SLACK_WEBHOOK_DOWN=https://hooks.slack.com/services/RISK/XXX/YYY
+SLACK_WEBHOOK_UP=https://hooks.slack.com/services/WINS/XXX/YYY
+SLACK_WEBHOOK_REPORT=https://hooks.slack.com/services/REPORT/XXX/YYY
+
+# Auto-update Thresholds (%)
+UPDATE_THRESHOLD_DOWN_PERCENT=10
+UPDATE_THRESHOLD_UP_PERCENT=10
+
+# Active Trading Window (Business hours filter)
+ACTIVE_WINDOW_ENABLE=true
+ACTIVE_BUSINESS_DAYS_ONLY=true
+ACTIVE_START=09:00
+ACTIVE_END=15:30
+
+# Rate Limits (Deduplication & Anti-Spam)
+ALERT_RATE_LIMIT_PER_TICKER_PER_DAY=2
+ALERT_MIN_INTERVAL_MINUTES=60
+ALERT_GLOBAL_DAILY_CAP=100
+
+# Weekly Report
+WEEKLY_REPORT_ENABLE=true
+WEEKLY_REPORT_WHEN=6,18:00
