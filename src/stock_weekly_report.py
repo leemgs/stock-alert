@@ -1,0 +1,206 @@
+import os
+import sys
+import smtplib
+import ssl
+from pathlib import Path
+from email.message import EmailMessage
+import yfinance as yf
+from datetime import datetime
+import pytz
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+STOCK_TXT_PATH = BASE_DIR / "data" / "stock.txt"
+
+def load_kv() -> dict:
+    kv = {}
+    for k, v in os.environ.items():
+        if k not in kv and v.strip() != "":
+            kv[k] = v.strip()
+    return kv
+
+def load_config() -> dict:
+    c = load_kv()
+    c.setdefault("SMTP_PORT", "587")
+    c["SMTP_PORT"] = int(c["SMTP_PORT"])
+    return c
+
+def send_email(cfg: dict, subject: str, html_body: str):
+    host = cfg.get("SMTP_HOST")
+    port = cfg.get("SMTP_PORT", 587)
+    user = cfg.get("SMTP_USER")
+    pw = cfg.get("SMTP_PASS")
+    to_list = cfg.get("EMAIL_TO")
+    
+    if not host or not user or not pw or not to_list:
+        print("[WEEKLY-REPORT] 메일 발송 설정(SMTP_HOST, SMTP_USER, SMTP_PASS, EMAIL_TO)이 누락되었습니다.")
+        return
+
+    msg = EmailMessage()
+    msg["Subject"] = subject
+    msg["From"] = cfg.get("EMAIL_FROM", user)
+    msg["To"] = to_list
+    msg.set_content("HTML을 지원하는 이메일 클라이언트가 필요합니다.")
+    msg.add_alternative(html_body, subtype="html")
+
+    ctx = ssl.create_default_context()
+    try:
+        if port == 465:
+            with smtplib.SMTP_SSL(host, port, context=ctx) as s:
+                s.login(user, pw)
+                s.send_message(msg)
+        else:
+            with smtplib.SMTP(host, port) as s:
+                s.starttls(context=ctx)
+                s.login(user, pw)
+                s.send_message(msg)
+        print(f"[WEEKLY-REPORT] 이메일 발송 성공: {to_list}")
+    except Exception as e:
+        print(f"[WEEKLY-REPORT] 이메일 발송 실패: {e}")
+
+def get_weekly_data(tickers):
+    results = []
+    for t in tickers:
+        try:
+            df = yf.Ticker(t).history(period="5d")
+            if df.empty:
+                continue
+            df = df.dropna(subset=['Close'])
+            if len(df) >= 2:
+                start_price = float(df['Close'].iloc[0])
+                end_price = float(df['Close'].iloc[-1])
+                change_pct = ((end_price - start_price) / start_price) * 100
+                results.append({
+                    "ticker": t,
+                    "start": start_price,
+                    "end": end_price,
+                    "change": change_pct
+                })
+        except Exception as e:
+            print(f"[WEEKLY-REPORT] {t} 조회 중 에러 발생: {e}")
+    return results
+
+def main():
+    cfg = load_config()
+    
+    if not STOCK_TXT_PATH.exists():
+        print(f"[WEEKLY-REPORT] {STOCK_TXT_PATH} 파일이 없습니다.")
+        return
+        
+    stocks = []
+    for line in STOCK_TXT_PATH.read_text(encoding="utf-8").splitlines():
+        s = line.strip()
+        if not s or s.startswith("#"): continue
+        parts = [x.strip() for x in s.split(",")]
+        if len(parts) >= 3:
+            stocks.append({"loc": parts[0], "name": parts[1], "ticker": parts[2]})
+            
+    tickers = [s["ticker"] for s in stocks]
+    if not tickers:
+        print("[WEEKLY-REPORT] 분석할 주식 종목이 없습니다.")
+        return
+        
+    print(f"[WEEKLY-REPORT] {len(tickers)}개 종목 데이터 조회 시작...")
+    weekly_data = get_weekly_data(tickers)
+    
+    if not weekly_data:
+        print("[WEEKLY-REPORT] 유효한 주식 데이터가 없어 리포트를 발송하지 않습니다.")
+        return
+        
+    # 등락률 순(내림차순) 정렬
+    weekly_data.sort(key=lambda x: x["change"], reverse=True)
+    
+    ticker_to_name = {s["ticker"]: s["name"] for s in stocks}
+    
+    kst = datetime.now(pytz.timezone("Asia/Seoul"))
+    date_str = kst.strftime("%Y-%m-%d %H:%M")
+    
+    html = f"""
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f6f8; color: #333; margin: 0; padding: 20px; }}
+            .container {{ max-width: 700px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }}
+            h2 {{ color: #2c3e50; font-size: 24px; margin-bottom: 5px; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; }}
+            .meta {{ font-size: 14px; color: #7f8c8d; margin-bottom: 20px; }}
+            table {{ width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }}
+            th, td {{ padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }}
+            th {{ background-color: #f8f9fa; color: #2c3e50; font-weight: bold; font-size: 13px; }}
+            tr:hover {{ background-color: #f5f5f5; }}
+            .positive {{ color: #e74c3c; font-weight: bold; }}
+            .negative {{ color: #3498db; font-weight: bold; }}
+            .neutral {{ color: #7f8c8d; font-weight: bold; }}
+            .footer {{ margin-top: 30px; font-size: 12px; color: #bdc3c7; text-align: center; border-top: 1px solid #ecf0f1; padding-top: 10px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h2>📈 주간 주식 동향 요약</h2>
+            <div class="meta">기준일: {date_str} (최근 5영업일 기준)</div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>종목명 (티커)</th>
+                        <th>시작가</th>
+                        <th>현재가 (종가)</th>
+                        <th>주간 등락률</th>
+                    </tr>
+                </thead>
+                <tbody>
+    """
+    
+    for item in weekly_data:
+        t = item["ticker"]
+        name = ticker_to_name.get(t, t)
+        chg = item["change"]
+        start_p = item["start"]
+        end_p = item["end"]
+        
+        if chg > 0:
+            color_class = "positive"
+            sign = "▲"
+        elif chg < 0:
+            color_class = "negative"
+            sign = "▼"
+        else:
+            color_class = "neutral"
+            sign = "-"
+            
+        # 소수점 가격 처리를 위해 숫자가 너무 클경우(원화) 소수점을 없앰
+        start_str = f"{{start_p:,.0f}}" if start_p > 1000 else f"{{start_p:,.2f}}"
+        end_str = f"{{end_p:,.0f}}" if end_p > 1000 else f"{{end_p:,.2f}}"
+        
+        start_str = start_str.format(start_p=start_p)
+        end_str = end_str.format(end_p=end_p)
+        
+        html += f"""
+                    <tr>
+                        <td><strong>{name}</strong> <span style="color:#7f8c8d; font-size:12px;">({t})</span></td>
+                        <td>{start_str}</td>
+                        <td>{end_str}</td>
+                        <td class="{color_class}">{sign} {abs(chg):.2f}%</td>
+                    </tr>
+        """
+        
+    html += """
+                </tbody>
+            </table>
+            
+            <div class="footer">
+                Stock Alert &copy; Automated Weekly Report
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    subject = f"[Stock Alert] 주간 주식 증감 추이 요약 리포트 ({date_str})"
+    send_email(cfg, subject, html)
+
+if __name__ == "__main__":
+    try: main()
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
