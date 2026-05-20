@@ -319,8 +319,7 @@ def generate_html_body(cfg, ts_str, down_breaches, up_breaches, errors, rate_lim
             <div class="alert-card">
                 <div class="ticker">{n} <span style="color:#7f8c8d; font-weight:normal;">({t})</span></div>
                 <div class="price-info">
-                    변경전:현재가 <span class="price-value" style="color:#3498db;">{p:.2f}</span> ≤ 하한가 <span class="price-value">{th:.2f}</span><br>
-                    변경후:현재가 <span class="price-value" style="color:#3498db;">{p:.2f}</span> ≤ 하한가 <span class="price-value">{th:.2f}</span> (하한가 {down_pct:g}% 하향:{nth:.2f})
+                    현재가 <span class="price-value" style="color:#3498db;">{p:.2f}</span> ≤ 하한가 <span class="price-value">{th:.2f}</span> ({down_pct:g}% 자동 하향:{nth:.2f})
                 </div>
             </div>
             """
@@ -334,8 +333,7 @@ def generate_html_body(cfg, ts_str, down_breaches, up_breaches, errors, rate_lim
             <div class="alert-card">
                 <div class="ticker">{n} <span style="color:#7f8c8d; font-weight:normal;">({t})</span></div>
                 <div class="price-info">
-                    변경전:현재가 <span class="price-value" style="color:#e74c3c;">{p:.2f}</span> ≥ 상한가 <span class="price-value">{th:.2f}</span><br>
-                    변경후:현재가 <span class="price-value" style="color:#e74c3c;">{p:.2f}</span> ≥ 상한가 <span class="price-value">{th:.2f}</span> (상한가 {up_pct:g}% 상향:{nth:.2f})
+                    현재가 <span class="price-value" style="color:#e74c3c;">{p:.2f}</span> ≥ 상한가 <span class="price-value">{th:.2f}</span> ({up_pct:g}% 자동 상향:{nth:.2f})
                 </div>
             </div>
             """
@@ -409,7 +407,7 @@ def send_slack_split(cfg, ts_str, down_breaches, up_breaches, errors):
     if down_breaches:
         url = cfg.get("SLACK_WEBHOOK_DOWN") or cfg.get("SLACK_WEBHOOK_URL")
         if url:
-            rows=[f"- *{n}* `{t}`: 변경전 `{p:.2f}` ≤ `{th:.2f}` -> 변경후 하한가 {down_pct:g}% 하향 `{nth:.2f}`" for n,t,p,th,nth in down_breaches]
+            rows=[f"- *{n}* `{t}`: 현재가 `{p:.2f}` ≤ 하한가 `{th:.2f}` ({down_pct:g}% 자동 하향:`{nth:.2f}`)" for n,t,p,th,nth in down_breaches]
             blocks = slack_blocks_header(ts_str) +                      slack_blocks_section(":small_red_triangle_down: 하한 돌파 (현재가 ≤ 하한)", rows)
             if errors:
                 blocks.append({"type":"divider"})
@@ -420,7 +418,7 @@ def send_slack_split(cfg, ts_str, down_breaches, up_breaches, errors):
     if up_breaches:
         url = cfg.get("SLACK_WEBHOOK_UP") or cfg.get("SLACK_WEBHOOK_URL")
         if url:
-            rows=[f"- *{n}* `{t}`: 변경전 `{p:.2f}` ≥ `{th:.2f}` -> 변경후 상한가 {up_pct:g}% 상향 `{nth:.2f}`" for n,t,p,th,nth in up_breaches]
+            rows=[f"- *{n}* `{t}`: 현재가 `{p:.2f}` ≥ 상한가 `{th:.2f}` ({up_pct:g}% 자동 상향:`{nth:.2f}`)" for n,t,p,th,nth in up_breaches]
             blocks = slack_blocks_header(ts_str) +                      slack_blocks_section(":small_red_triangle: 상한 돌파 (현재가 ≥ 상한)", rows)
             if errors and not down_breaches:
                 blocks.append({"type":"divider"})
@@ -567,9 +565,9 @@ def main():
                     down_pct = cfg.get("UPDATE_THRESHOLD_DOWN_PERCENT", 10)
                     up_pct = cfg.get("UPDATE_THRESHOLD_UP_PERCENT", 10)
                     if down_breaches:
-                        rows += [f"- *{n}* `{t}`: 변경전 `{p:.2f}` ≤ `{th:.2f}` -> 변경후 하한가 {down_pct:g}% 하향 `{nth:.2f}`" for n,t,p,th,nth in down_breaches]
+                        rows += [f"- *{n}* `{t}`: 현재가 `{p:.2f}` ≤ 하한가 `{th:.2f}` ({down_pct:g}% 자동 하향:`{nth:.2f}`)" for n,t,p,th,nth in down_breaches]
                     if up_breaches:
-                        rows += [f"- *{n}* `{t}`: 변경전 `{p:.2f}` ≥ `{th:.2f}` -> 변경후 상한가 {up_pct:g}% 상향 `{nth:.2f}`" for n,t,p,th,nth in up_breaches]
+                        rows += [f"- *{n}* `{t}`: 현재가 `{p:.2f}` ≥ 상한가 `{th:.2f}` ({up_pct:g}% 자동 상향:`{nth:.2f}`)" for n,t,p,th,nth in up_breaches]
                     blocks = slack_blocks_header(ts_str) +                              slack_blocks_section("임계 도달 종목 (상/하한)", rows)
                     if errors or rate_limited_notes:
                         blocks.append({"type":"divider"})
