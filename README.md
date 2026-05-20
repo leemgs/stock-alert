@@ -39,7 +39,6 @@ stock-alert/
 ├── README.md
 ├── requirements.txt
 ├── data/
-│   ├── config.txt
 │   └── stock.txt
 ├── src/
 │   ├── multi_stock_alert.py
@@ -59,11 +58,14 @@ stock-alert/
 # 1. 의존성 설치
 pip install -r requirements.txt
 
-# 2. 설정 파일 작성
-vi /opt/stock_alert/config.txt
-vi /opt/stock_alert/stock.txt
+# 2. 주식 임계값 파일 작성
+vi data/stock.txt
 
-# 3. 테스트 실행
+# 3. 환경 변수 세팅 후 테스트 실행
+export SMTP_HOST=smtp.gmail.com
+export SMTP_USER=your_email@gmail.com
+export SMTP_PASS=your_app_password
+export EMAIL_TO=you@company.com
 python src/multi_stock_alert.py
 
 # 4. 크론 등록 (1시간마다)
@@ -84,30 +86,37 @@ loc, company_name, ticker, price_down, price_up
 미국, Tesla, TSLA, 150, 350
 ```
 
-### `config.txt`
+### 환경 변수 (Environment Variables)
 
-```ini
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your_email@gmail.com
-SMTP_PASS=your_app_password
-EMAIL_FROM=Stock Alert <your_email@gmail.com>
-EMAIL_TO=your_email@gmail.com
+기존 `config.txt` 대신 **환경 변수**를 통해 설정을 주입합니다. 로컬 실행 시에는 `export`로, GitHub Actions 실행 시에는 **Repository Secrets/Variables**에 등록하여 사용하세요.
+*(https://github.com/leemgs/stock-alert/settings/secrets/actions 참고)*
 
-SLACK_ENABLE=true
-SLACK_SPLIT_CHANNELS=true
-SLACK_WEBHOOK_DOWN=https://hooks.slack.com/services/XXXX/XXXX/risk
-SLACK_WEBHOOK_UP=https://hooks.slack.com/services/XXXX/XXXX/wins
-SLACK_WEBHOOK_REPORT=https://hooks.slack.com/services/XXXX/XXXX/report
+```bash
+# [필수] 이메일 알림 설정
+export SMTP_HOST="smtp.gmail.com"
+export SMTP_USER="your_email@gmail.com"
+export SMTP_PASS="your_app_password"
+export EMAIL_TO="you@company.com"
 
-ALERT_RATE_LIMIT_PER_TICKER_PER_DAY=2
-ALERT_MIN_INTERVAL_MINUTES=60
-ALERT_GLOBAL_DAILY_CAP=100
+# [선택] Slack 알림 (주석 해제 후 사용)
+# export SLACK_ENABLE="true"
+# export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/XXX/YYY/ZZZ"
 
-ACTIVE_WINDOW_ENABLE=true
-ACTIVE_BUSINESS_DAYS_ONLY=true
-ACTIVE_START=09:00
-ACTIVE_END=15:30
+# ---------------------------------------------------------
+# [고급 설정] (기본값이 적용되며 필요시 설정)
+# ---------------------------------------------------------
+# 임계값 자동 변경 폭 (%)
+# export UPDATE_THRESHOLD_DOWN_PERCENT="10"
+# export UPDATE_THRESHOLD_UP_PERCENT="10"
+# 
+# 장중 활성화 여부
+# export ACTIVE_WINDOW_ENABLE="false"
+# export ACTIVE_START="09:00"
+# export ACTIVE_END="15:30"
+# 
+# 시스템 설정
+# export ALERT_RATE_LIMIT_PER_TICKER_PER_DAY="2"
+# export ALERT_MIN_INTERVAL_MINUTES="60"
 ```
 
 ---
@@ -140,8 +149,10 @@ ACTIVE_END=15:30
 | SMTP_HOST, SMTP_PORT, SMTP_USER                                 | 이메일 발송용 SMTP 설정      |
 | EMAIL_FROM, EMAIL_TO                                            | 발신자/수신자 이메일          |
 | SLACK_ENABLE, SLACK_SPLIT_CHANNELS                              | Slack 사용 여부 및 채널 분리 |
-| ALERT_RATE_LIMIT_PER_TICKER_PER_DAY, ALERT_MIN_INTERVAL_MINUTES | 알림 rate-limit 제어     |
-| TZ, ACTIVE_WINDOW_ENABLE, ACTIVE_START, ACTIVE_END              | 시간대 및 장중 필터          |
+| UPDATE_THRESHOLD_DOWN_PERCENT, UPDATE_THRESHOLD_UP_PERCENT      | 임계값 자동 상향/하향 조정 퍼센트 |
+| ALERT_RATE_LIMIT_PER_TICKER_PER_DAY, ALERT_MIN_INTERVAL_MINUTES, ALERT_GLOBAL_DAILY_CAP | 알림 rate-limit 및 전역 캡 제어 |
+| ACTIVE_WINDOW_ENABLE, ACTIVE_START, ACTIVE_END, ACTIVE_BUSINESS_DAYS_ONLY | 장중 특정 시간대 및 영업일 필터 |
+| WEEKLY_REPORT_ENABLE, WEEKLY_REPORT_WHEN                        | 주간 리포트 발송 여부 및 주기   |
 
 
 ### 2️⃣ 워크플로 실행 확인

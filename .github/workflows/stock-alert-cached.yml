@@ -42,7 +42,7 @@ jobs:
 
 
 
-      - name: Build config from secrets
+      - name: Run alerts
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST || vars.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT || vars.SMTP_PORT }}
@@ -56,7 +56,6 @@ jobs:
           SLACK_WEBHOOK_DOWN: ${{ secrets.SLACK_WEBHOOK_DOWN || vars.SLACK_WEBHOOK_DOWN }}
           SLACK_WEBHOOK_UP: ${{ secrets.SLACK_WEBHOOK_UP || vars.SLACK_WEBHOOK_UP }}
           SLACK_WEBHOOK_REPORT: ${{ secrets.SLACK_WEBHOOK_REPORT || vars.SLACK_WEBHOOK_REPORT }}
-          TZV: ${{ secrets.TZ || vars.TZ }}
           ACTIVE_WINDOW_ENABLE: ${{ secrets.ACTIVE_WINDOW_ENABLE || vars.ACTIVE_WINDOW_ENABLE }}
           ACTIVE_START: ${{ secrets.ACTIVE_START || vars.ACTIVE_START }}
           ACTIVE_END: ${{ secrets.ACTIVE_END || vars.ACTIVE_END }}
@@ -64,45 +63,6 @@ jobs:
           ALERT_RATE_LIMIT_PER_TICKER_PER_DAY: ${{ secrets.ALERT_RATE_LIMIT_PER_TICKER_PER_DAY || vars.ALERT_RATE_LIMIT_PER_TICKER_PER_DAY }}
           ALERT_MIN_INTERVAL_MINUTES: ${{ secrets.ALERT_MIN_INTERVAL_MINUTES || vars.ALERT_MIN_INTERVAL_MINUTES }}
           ALERT_GLOBAL_DAILY_CAP: ${{ secrets.ALERT_GLOBAL_DAILY_CAP || vars.ALERT_GLOBAL_DAILY_CAP }}
-        run: |
-          cat > data/config.txt <<EOF
-          SMTP_HOST=${SMTP_HOST}
-          SMTP_PORT=${SMTP_PORT}
-          SMTP_USER=${SMTP_USER}
-          SMTP_PASS=${SMTP_PASS}
-          EMAIL_FROM=${EMAIL_FROM}
-          EMAIL_TO=${EMAIL_TO}
-          TZ=${TZV:-Asia/Seoul}
-
-          DAILY_DEDUP=true
-          ALERT_ON_CROSSDOWN_ONLY=false
-          ALERT_ON_CROSSUP_ONLY=false
-
-          SLACK_ENABLE=${SLACK_ENABLE:-true}
-          SLACK_USERNAME=Stock-Alert-Bot
-          SLACK_ICON_EMOJI=:bar_chart:
-          SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
-          SLACK_SPLIT_CHANNELS=${SLACK_SPLIT_CHANNELS:-false}
-          SLACK_WEBHOOK_DOWN=${SLACK_WEBHOOK_DOWN}
-          SLACK_WEBHOOK_UP=${SLACK_WEBHOOK_UP}
-          SLACK_WEBHOOK_REPORT=${SLACK_WEBHOOK_REPORT}
-
-          ACTIVE_WINDOW_ENABLE=${ACTIVE_WINDOW_ENABLE:-false}
-          ACTIVE_TZ=${TZV:-Asia/Seoul}
-          ACTIVE_BUSINESS_DAYS_ONLY=${ACTIVE_BUSINESS_DAYS_ONLY:-true}
-          ACTIVE_START=${ACTIVE_START:-09:00}
-          ACTIVE_END=${ACTIVE_END:-15:30}
-
-          ALERT_RATE_LIMIT_PER_TICKER_PER_DAY=${ALERT_RATE_LIMIT_PER_TICKER_PER_DAY:-2}
-          ALERT_MIN_INTERVAL_MINUTES=${ALERT_MIN_INTERVAL_MINUTES:-60}
-          ALERT_GLOBAL_DAILY_CAP=${ALERT_GLOBAL_DAILY_CAP:-100}
-
-          WEEKLY_REPORT_ENABLE=false
-          WEEKLY_REPORT_TZ=${TZV:-Asia/Seoul}
-          WEEKLY_REPORT_WHEN=6,18:00
-          EOF
-
-      - name: Run alerts
         run: |
           python src/multi_stock_alert.py
 

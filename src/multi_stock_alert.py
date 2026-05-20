@@ -43,10 +43,17 @@ def _is_ci_like_env() -> bool:
 # ---------- Config ----------
 def load_kv(path: Path) -> dict:
     kv={}
-    for raw in path.read_text(encoding="utf-8").splitlines():
-        s=raw.strip()
-        if not s or s.startswith("#") or "=" not in s: continue
-        k,v=s.split("=",1); kv[k.strip()]=v.strip()
+    if path.exists():
+        for raw in path.read_text(encoding="utf-8").splitlines():
+            s=raw.strip()
+            if not s or s.startswith("#") or "=" not in s: continue
+            k,v=s.split("=",1); kv[k.strip()]=v.strip()
+            
+    # 환경변수 우선 병합 (config.txt가 없더라도 작동하도록 지원)
+    for k, v in os.environ.items():
+        if k not in kv:
+            kv[k] = v
+            
     return kv
 
 def load_config(path: Path)->dict:

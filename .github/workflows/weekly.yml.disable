@@ -42,7 +42,6 @@ jobs:
           SLACK_WEBHOOK_DOWN: ${{ secrets.SLACK_WEBHOOK_DOWN || vars.SLACK_WEBHOOK_DOWN }}
           SLACK_WEBHOOK_UP: ${{ secrets.SLACK_WEBHOOK_UP || vars.SLACK_WEBHOOK_UP }}
           SLACK_WEBHOOK_REPORT: ${{ secrets.SLACK_WEBHOOK_REPORT || vars.SLACK_WEBHOOK_REPORT }}
-          TZV: ${{ secrets.TZ || vars.TZ }}
         run: |
           cat > /opt/stock_alert/config.txt <<EOF
           SMTP_HOST=${SMTP_HOST}
@@ -51,7 +50,7 @@ jobs:
           SMTP_PASS=${SMTP_PASS}
           EMAIL_FROM=${EMAIL_FROM}
           EMAIL_TO=${EMAIL_TO}
-          TZ=${TZV:-Asia/Seoul}
+          TZ=Asia/Seoul
 
           SLACK_ENABLE=${SLACK_ENABLE:-true}
           SLACK_USERNAME=Stock-Alert-Bot
@@ -63,7 +62,7 @@ jobs:
           SLACK_WEBHOOK_REPORT=${SLACK_WEBHOOK_REPORT}
 
           WEEKLY_REPORT_ENABLE=true
-          WEEKLY_REPORT_TZ=${TZV:-Asia/Seoul}
+          WEEKLY_REPORT_TZ=Asia/Seoul
           WEEKLY_REPORT_WHEN=6,18:00
           EOF
 
