@@ -55,7 +55,6 @@ jobs:
           SLACK_SPLIT_CHANNELS: ${{ secrets.SLACK_SPLIT_CHANNELS || vars.SLACK_SPLIT_CHANNELS }}
           SLACK_WEBHOOK_DOWN: ${{ secrets.SLACK_WEBHOOK_DOWN || vars.SLACK_WEBHOOK_DOWN }}
           SLACK_WEBHOOK_UP: ${{ secrets.SLACK_WEBHOOK_UP || vars.SLACK_WEBHOOK_UP }}
-          SLACK_WEBHOOK_REPORT: ${{ secrets.SLACK_WEBHOOK_REPORT || vars.SLACK_WEBHOOK_REPORT }}
           ACTIVE_WINDOW_ENABLE: ${{ secrets.ACTIVE_WINDOW_ENABLE || vars.ACTIVE_WINDOW_ENABLE }}
           ACTIVE_START: ${{ secrets.ACTIVE_START || vars.ACTIVE_START }}
           ACTIVE_END: ${{ secrets.ACTIVE_END || vars.ACTIVE_END }}

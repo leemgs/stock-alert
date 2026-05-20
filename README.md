@@ -46,8 +46,7 @@ stock-alert/
 │   └── run.sh
 └── .github/
     └── workflows/
-        ├── alerts.yml     # 2시간마다 자동 알림
-        └── weekly.yml     # 주간 리포트
+        └── alerts.yml     # 2시간마다 자동 알림
 ```
 
 ---
@@ -119,7 +118,6 @@ loc, company_name, ticker, price_down, price_up
 | `SLACK_WEBHOOK_URL` | 선택 | (없음) | 단일 채널 사용 시 Slack 웹훅 URL |
 | `SLACK_WEBHOOK_DOWN` | 선택 | (없음) | 하한 돌파 전용 Slack 웹훅 URL (`SLACK_SPLIT_CHANNELS=true` 시) |
 | `SLACK_WEBHOOK_UP` | 선택 | (없음) | 상한 돌파 전용 Slack 웹훅 URL (`SLACK_SPLIT_CHANNELS=true` 시) |
-| `SLACK_WEBHOOK_REPORT` | 선택 | (없음) | 주간 리포트 전송용 웹훅 URL |
 
 #### ⚙️ Repository Variables (일반 설정 정보)
 | Key | 필수여부 | 기본값(Default) | 설명 |
@@ -140,8 +138,6 @@ loc, company_name, ticker, price_down, price_up
 | `ACTIVE_START` | 선택 | `00:00` | 활성 시작 시간 (`HH:MM`) |
 | `ACTIVE_END` | 선택 | `23:59` | 활성 종료 시간 (`HH:MM`) |
 | `ACTIVE_BUSINESS_DAYS_ONLY` | 선택 | `true` | 평일(월~금)에만 알림 활성화 여부 (`true`/`false`) |
-| `WEEKLY_REPORT_ENABLE` | 선택 | `false` | 주간 리포트 활성화 여부 (`true`/`false`) |
-| `WEEKLY_REPORT_WHEN` | 선택 | `6,18:00` | 주간 리포트 발송 요일 및 시간 (일요일 18시) |
 
 
 ### 2️⃣ 워크플로 실행 확인
