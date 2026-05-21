@@ -92,7 +92,7 @@ loc, company_name, ticker, price_down, price_up
 
 ### 환경 변수 (Environment Variables)
 
-기존 `config.txt` 대신 **환경 변수**를 통해 설정을 주입합니다.
+실행에 필요한 설정은 **환경 변수**를 통해 주입합니다.
 로컬 실행 시에는 `.env.example` 파일을 참고하여 `export`로 환경 변수를 적용하시고, GitHub Actions 실행 시에는 **Repository Secrets/Variables**에 등록하여 사용하세요.
 *(https://github.com/leemgs/stock-alert/settings/secrets/actions 참고)*
 

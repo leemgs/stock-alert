@@ -8,7 +8,7 @@ Stock Alert Bot
 
 Files under /opt/stock_alert:
   - multi_stock_alert.py  (this script)
-  - config.txt            (key=value)
+
   - stock.txt             (CSV-like lines: loc, name, ticker, price_down, price_up)
   - state.json            (runtime state)
   - history.json          (recent alerts log; auto-disabled on CI)
@@ -49,7 +49,7 @@ def load_kv(path: Path) -> dict:
             if not s or s.startswith("#") or "=" not in s: continue
             k,v=s.split("=",1); kv[k.strip()]=v.strip()
             
-    # 환경변수 우선 병합 (config.txt가 없더라도 작동하도록 지원)
+    # 환경변수 우선 병합
     for k, v in os.environ.items():
         if k not in kv and v.strip() != "":
             kv[k] = v.strip()
