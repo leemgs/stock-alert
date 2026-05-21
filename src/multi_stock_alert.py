@@ -73,14 +73,14 @@ def load_config(path: Path)->dict:
 
     # Active window
     c.setdefault("ACTIVE_TZ", c.get("TZ","Asia/Seoul"))
-    c.setdefault("ACTIVE_BUSINESS_DAYS_ONLY","false")
+    c["ACTIVE_BUSINESS_DAYS_ONLY"] = False
     c.setdefault("ACTIVE_START","00:00")
     c.setdefault("ACTIVE_END","23:59")
 
-    # Rate-limit
-    c.setdefault("ALERT_RATE_LIMIT_PER_TICKER_PER_DAY","2")
-    c.setdefault("ALERT_MIN_INTERVAL_MINUTES","60")
-    c.setdefault("ALERT_GLOBAL_DAILY_CAP","100")
+    # Rate-limit (Hardcoded)
+    c["ALERT_RATE_LIMIT_PER_TICKER_PER_DAY"] = 2
+    c["ALERT_MIN_INTERVAL_MINUTES"] = 60
+    c["ALERT_GLOBAL_DAILY_CAP"] = 100
 
     # Price source
     c.setdefault("INFO_TYPE", "info")
@@ -97,10 +97,6 @@ def load_config(path: Path)->dict:
     c["DAILY_DEDUP"]=c["DAILY_DEDUP"].lower()=="true"
     c["ALERT_ON_CROSSDOWN_ONLY"]=c["ALERT_ON_CROSSDOWN_ONLY"].lower()=="true"
     c["ALERT_ON_CROSSUP_ONLY"]=c["ALERT_ON_CROSSUP_ONLY"].lower()=="true"
-    c["ACTIVE_BUSINESS_DAYS_ONLY"]=c["ACTIVE_BUSINESS_DAYS_ONLY"].lower()=="true"
-    c["ALERT_RATE_LIMIT_PER_TICKER_PER_DAY"]=int(c["ALERT_RATE_LIMIT_PER_TICKER_PER_DAY"])
-    c["ALERT_MIN_INTERVAL_MINUTES"]=int(c["ALERT_MIN_INTERVAL_MINUTES"])
-    c["ALERT_GLOBAL_DAILY_CAP"]=int(c["ALERT_GLOBAL_DAILY_CAP"])
     c["UPDATE_THRESHOLD_DOWN_PERCENT"]=float(c["UPDATE_THRESHOLD_DOWN_PERCENT"])
     c["UPDATE_THRESHOLD_UP_PERCENT"]=float(c["UPDATE_THRESHOLD_UP_PERCENT"])
     

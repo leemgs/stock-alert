@@ -129,12 +129,8 @@ loc, company_name, ticker, price_down, price_up
 | `EMAIL_TO` | 선택 | `root@localhost` | 알림 수신자 주소 (여러 명일 경우 쉼표 `,` 로 구분) |
 | `UPDATE_THRESHOLD_DOWN_PERCENT`| 선택 | `10` | 하한가 자동 하향 폭 (%) |
 | `UPDATE_THRESHOLD_UP_PERCENT` | 선택 | `10` | 상한가 자동 상향 폭 (%) |
-| `ALERT_RATE_LIMIT_PER_TICKER_PER_DAY` | 선택 | `2` | 1일 1종목 최대 알림 발생 제한 횟수 |
-| `ALERT_MIN_INTERVAL_MINUTES` | 선택 | `60` | 동일 종목 최소 알림 간격 (분) |
-| `ALERT_GLOBAL_DAILY_CAP` | 선택 | `100` | 전체 종목 합산 1일 최대 알림 횟수 |
 | `ACTIVE_START` | 선택 | `00:00` | 활성 시작 시간 (`HH:MM`) |
 | `ACTIVE_END` | 선택 | `23:59` | 활성 종료 시간 (`HH:MM`) |
-| `ACTIVE_BUSINESS_DAYS_ONLY` | 선택 | `false` | 평일(월~금)에만 알림 활성화 여부 (`true`/`false`) |
 
 
 ### 2️⃣ 워크플로 실행 확인

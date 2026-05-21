@@ -53,10 +53,6 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
           ACTIVE_START: ${{ secrets.ACTIVE_START || vars.ACTIVE_START }}
           ACTIVE_END: ${{ secrets.ACTIVE_END || vars.ACTIVE_END }}
-          ACTIVE_BUSINESS_DAYS_ONLY: ${{ secrets.ACTIVE_BUSINESS_DAYS_ONLY || vars.ACTIVE_BUSINESS_DAYS_ONLY }}
-          ALERT_RATE_LIMIT_PER_TICKER_PER_DAY: ${{ secrets.ALERT_RATE_LIMIT_PER_TICKER_PER_DAY || vars.ALERT_RATE_LIMIT_PER_TICKER_PER_DAY }}
-          ALERT_MIN_INTERVAL_MINUTES: ${{ secrets.ALERT_MIN_INTERVAL_MINUTES || vars.ALERT_MIN_INTERVAL_MINUTES }}
-          ALERT_GLOBAL_DAILY_CAP: ${{ secrets.ALERT_GLOBAL_DAILY_CAP || vars.ALERT_GLOBAL_DAILY_CAP }}
         run: |
           python src/multi_stock_alert.py
 
