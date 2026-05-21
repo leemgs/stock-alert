@@ -68,10 +68,8 @@ def load_config(path: Path)->dict:
     c.setdefault("ALERT_ON_CROSSUP_ONLY","false")
 
     # Slack
-    c.setdefault("SLACK_ENABLE","false")
     c.setdefault("SLACK_USERNAME","Stock-Alert-Bot")
     c.setdefault("SLACK_ICON_EMOJI",":bar_chart:")
-    c.setdefault("SLACK_SPLIT_CHANNELS","false")   # A: default single channel
 
     # Active window
     c.setdefault("ACTIVE_WINDOW_ENABLE","false")
@@ -100,8 +98,6 @@ def load_config(path: Path)->dict:
     c["DAILY_DEDUP"]=c["DAILY_DEDUP"].lower()=="true"
     c["ALERT_ON_CROSSDOWN_ONLY"]=c["ALERT_ON_CROSSDOWN_ONLY"].lower()=="true"
     c["ALERT_ON_CROSSUP_ONLY"]=c["ALERT_ON_CROSSUP_ONLY"].lower()=="true"
-    c["SLACK_ENABLE"]=c["SLACK_ENABLE"].lower()=="true"
-    c["SLACK_SPLIT_CHANNELS"]=c["SLACK_SPLIT_CHANNELS"].lower()=="true"
     c["ACTIVE_WINDOW_ENABLE"]=c["ACTIVE_WINDOW_ENABLE"].lower()=="true"
     c["ACTIVE_BUSINESS_DAYS_ONLY"]=c["ACTIVE_BUSINESS_DAYS_ONLY"].lower()=="true"
     c["ALERT_RATE_LIMIT_PER_TICKER_PER_DAY"]=int(c["ALERT_RATE_LIMIT_PER_TICKER_PER_DAY"])
@@ -399,32 +395,7 @@ def post_slack(url, username, icon_emoji, blocks):
     if r.status_code!=200:
         print(LOG_PREFIX+f"Slack 전송 실패: {r.status_code} {r.text}", file=sys.stderr)
 
-def send_slack_split(cfg, ts_str, down_breaches, up_breaches, errors):
-    if not cfg["SLACK_ENABLE"]: return
-    username=cfg.get("SLACK_USERNAME","Stock-Alert-Bot")
-    icon=cfg.get("SLACK_ICON_EMOJI",":bar_chart:")
 
-    down_pct = cfg.get("UPDATE_THRESHOLD_DOWN_PERCENT", 10)
-    if down_breaches:
-        url = cfg.get("SLACK_WEBHOOK_DOWN") or cfg.get("SLACK_WEBHOOK_URL")
-        if url:
-            rows=[f"- *{n}* `{t}`: 현재가 `{p:.2f}` ≤ 하한가 `{th:.2f}` ({down_pct:g}% 자동 하향:`{nth:.2f}`)" for n,t,p,th,nth in down_breaches]
-            blocks = slack_blocks_header(ts_str) +                      slack_blocks_section(":small_red_triangle_down: 하한 돌파 (현재가 ≤ 하한)", rows)
-            if errors:
-                blocks.append({"type":"divider"})
-                blocks += slack_blocks_section("_(참고) 조회 오류_", [f"- {e}" for e in errors])
-            post_slack(url, username, icon, blocks)
-
-    up_pct = cfg.get("UPDATE_THRESHOLD_UP_PERCENT", 10)
-    if up_breaches:
-        url = cfg.get("SLACK_WEBHOOK_UP") or cfg.get("SLACK_WEBHOOK_URL")
-        if url:
-            rows=[f"- *{n}* `{t}`: 현재가 `{p:.2f}` ≥ 상한가 `{th:.2f}` ({up_pct:g}% 자동 상향:`{nth:.2f}`)" for n,t,p,th,nth in up_breaches]
-            blocks = slack_blocks_header(ts_str) +                      slack_blocks_section(":small_red_triangle: 상한 돌파 (현재가 ≥ 상한)", rows)
-            if errors and not down_breaches:
-                blocks.append({"type":"divider"})
-                blocks += slack_blocks_section("_(참고) 조회 오류_", [f"- {e}" for e in errors])
-            post_slack(url, username, icon, blocks)
 
 # ---------- Rate-limit ----------
 def rl_reset_if_new_day(state, today):
@@ -556,27 +527,23 @@ def main():
         except Exception as e:
             print(LOG_PREFIX+f"메일 발송 실패: {e}", file=sys.stderr)
 
-        if cfg["SLACK_ENABLE"]:
-            if cfg["SLACK_SPLIT_CHANNELS"]:
-                send_slack_split(cfg, ts_str, down_breaches, up_breaches, errors)
-            else:
-                url = cfg.get("SLACK_WEBHOOK_URL")
-                if url:
-                    rows=[]
-                    down_pct = cfg.get("UPDATE_THRESHOLD_DOWN_PERCENT", 10)
-                    up_pct = cfg.get("UPDATE_THRESHOLD_UP_PERCENT", 10)
-                    if down_breaches:
-                        rows += [f"- *{n}* `{t}`: 현재가 `{p:.2f}` ≤ 하한가 `{th:.2f}` ({down_pct:g}% 자동 하향:`{nth:.2f}`)" for n,t,p,th,nth in down_breaches]
-                    if up_breaches:
-                        rows += [f"- *{n}* `{t}`: 현재가 `{p:.2f}` ≥ 상한가 `{th:.2f}` ({up_pct:g}% 자동 상향:`{nth:.2f}`)" for n,t,p,th,nth in up_breaches]
-                    blocks = slack_blocks_header(ts_str) +                              slack_blocks_section("임계 도달 종목 (상/하한)", rows)
-                    if errors or rate_limited_notes:
-                        blocks.append({"type":"divider"})
-                        if errors:
-                            blocks += slack_blocks_section("_(참고) 조회 오류_", [f"- {e}" for e in errors])
-                        if rate_limited_notes:
-                            blocks += slack_blocks_section("_(참고) rate-limit 생략_", [f"- {x}" for x in rate_limited_notes])
-                    post_slack(url, cfg.get("SLACK_USERNAME","Stock-Alert-Bot"), cfg.get("SLACK_ICON_EMOJI",":bar_chart:"), blocks)
+        url = cfg.get("SLACK_WEBHOOK_URL")
+        if url:
+            rows=[]
+            down_pct = cfg.get("UPDATE_THRESHOLD_DOWN_PERCENT", 10)
+            up_pct = cfg.get("UPDATE_THRESHOLD_UP_PERCENT", 10)
+            if down_breaches:
+                rows += [f"- *{n}* `{t}`: 현재가 `{p:.2f}` ≤ 하한가 `{th:.2f}` ({down_pct:g}% 자동 하향:`{nth:.2f}`)" for n,t,p,th,nth in down_breaches]
+            if up_breaches:
+                rows += [f"- *{n}* `{t}`: 현재가 `{p:.2f}` ≥ 상한가 `{th:.2f}` ({up_pct:g}% 자동 상향:`{nth:.2f}`)" for n,t,p,th,nth in up_breaches]
+            blocks = slack_blocks_header(ts_str) +                          slack_blocks_section("임계 도달 종목 (상/하한)", rows)
+            if errors or rate_limited_notes:
+                blocks.append({"type":"divider"})
+                if errors:
+                    blocks += slack_blocks_section("_(참고) 조회 오류_", [f"- {e}" for e in errors])
+                if rate_limited_notes:
+                    blocks += slack_blocks_section("_(참고) rate-limit 생략_", [f"- {x}" for x in rate_limited_notes])
+            post_slack(url, cfg.get("SLACK_USERNAME","Stock-Alert-Bot"), cfg.get("SLACK_ICON_EMOJI",":bar_chart:"), blocks)
     else:
         note = []
         if rate_limited_notes: note.append("rate-limit 생략: "+", ".join(rate_limited_notes))

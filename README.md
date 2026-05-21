@@ -23,7 +23,7 @@
 | **가격 모니터링**            | Yahoo Finance API(`yfinance`)를 통해 종목별 실시간 시세 수집      |
 | **임계가 알림**             | 하한(`price_down`) 이하 또는 상한(`price_up`) 이상일 때 메일/슬랙 발송 |
 | **Rate-Limit 제어**      | 하루 종목당 최대 알림 횟수, 최소 알림 간격, 글로벌 알림 캡 제한               |
-| **Slack 분기 채널 지원**     | 상승 시 `#wins`, 하락 시 `#risk` 등 별도 채널로 전송 가능            |
+| **Slack 알림 전송**     | 임계가 도달 시 전용 채널로 실시간 알림 전송            |
 | **주간 리포트**             | 주 1회 Slack 리포트 자동 발송 (지난 7일 상/하한 기록 요약)              |
 | **장중 실행 제한**           | 장중(예: 09:00~15:30) 시간대만 알림 수행                        |
 | **GitHub Actions 자동화** | 별도 서버 없이 1시간마다/주 1회 GitHub Actions로 자동 실행 가능         |
@@ -117,9 +117,7 @@ loc, company_name, ticker, price_down, price_up
 | Key | 필수여부 | 기본값(Default) | 설명 |
 | --- | --- | --- | --- |
 | `SMTP_PASS` | 필수 | (없음) | 이메일 발송용 SMTP 앱 비밀번호 |
-| `SLACK_WEBHOOK_URL` | 선택 | (없음) | 단일 채널 사용 시 Slack 웹훅 URL |
-| `SLACK_WEBHOOK_DOWN` | 선택 | (없음) | 하한 돌파 전용 Slack 웹훅 URL (`SLACK_SPLIT_CHANNELS=true` 시) |
-| `SLACK_WEBHOOK_UP` | 선택 | (없음) | 상한 돌파 전용 Slack 웹훅 URL (`SLACK_SPLIT_CHANNELS=true` 시) |
+| `SLACK_WEBHOOK_URL` | 선택 | (없음) | Slack 웹훅 URL |
 
 #### ⚙️ Repository Variables (일반 설정 정보)
 | Key | 필수여부 | 기본값(Default) | 설명 |
@@ -129,8 +127,6 @@ loc, company_name, ticker, price_down, price_up
 | `SMTP_USER` | 필수 | (없음) | 발송용 이메일 계정 ID |
 | `EMAIL_FROM` | 선택 | `SMTP_USER`와 동일 | 알림 발신자 주소 |
 | `EMAIL_TO` | 선택 | `root@localhost` | 알림 수신자 주소 (여러 명일 경우 쉼표 `,` 로 구분) |
-| `SLACK_ENABLE` | 선택 | `false` | Slack 알림 활성화 여부 (`true`/`false`) |
-| `SLACK_SPLIT_CHANNELS` | 선택 | `false` | 상/하한 채널 분리 여부 (`true`/`false`) |
 | `UPDATE_THRESHOLD_DOWN_PERCENT`| 선택 | `10` | 하한가 자동 하향 폭 (%) |
 | `UPDATE_THRESHOLD_UP_PERCENT` | 선택 | `10` | 상한가 자동 상향 폭 (%) |
 | `ALERT_RATE_LIMIT_PER_TICKER_PER_DAY` | 선택 | `2` | 1일 1종목 최대 알림 발생 제한 횟수 |
