@@ -72,9 +72,8 @@ def load_config(path: Path)->dict:
     c.setdefault("SLACK_ICON_EMOJI",":bar_chart:")
 
     # Active window
-    c.setdefault("ACTIVE_WINDOW_ENABLE","false")
     c.setdefault("ACTIVE_TZ", c.get("TZ","Asia/Seoul"))
-    c.setdefault("ACTIVE_BUSINESS_DAYS_ONLY","true")
+    c.setdefault("ACTIVE_BUSINESS_DAYS_ONLY","false")
     c.setdefault("ACTIVE_START","00:00")
     c.setdefault("ACTIVE_END","23:59")
 
@@ -98,7 +97,6 @@ def load_config(path: Path)->dict:
     c["DAILY_DEDUP"]=c["DAILY_DEDUP"].lower()=="true"
     c["ALERT_ON_CROSSDOWN_ONLY"]=c["ALERT_ON_CROSSDOWN_ONLY"].lower()=="true"
     c["ALERT_ON_CROSSUP_ONLY"]=c["ALERT_ON_CROSSUP_ONLY"].lower()=="true"
-    c["ACTIVE_WINDOW_ENABLE"]=c["ACTIVE_WINDOW_ENABLE"].lower()=="true"
     c["ACTIVE_BUSINESS_DAYS_ONLY"]=c["ACTIVE_BUSINESS_DAYS_ONLY"].lower()=="true"
     c["ALERT_RATE_LIMIT_PER_TICKER_PER_DAY"]=int(c["ALERT_RATE_LIMIT_PER_TICKER_PER_DAY"])
     c["ALERT_MIN_INTERVAL_MINUTES"]=int(c["ALERT_MIN_INTERVAL_MINUTES"])
@@ -217,7 +215,6 @@ def now_tz(tzname:str):
     return datetime.datetime.now(pytz.timezone(tzname))
 
 def within_active_window(cfg:dict)->bool:
-    if not cfg["ACTIVE_WINDOW_ENABLE"]: return True
     tz=pytz.timezone(cfg["ACTIVE_TZ"]); now=datetime.datetime.now(tz)
     if cfg["ACTIVE_BUSINESS_DAYS_ONLY"] and now.weekday()>=5: return False
     def HM(s): h,m=s.split(":"); return int(h),int(m)

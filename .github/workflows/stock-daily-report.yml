@@ -51,7 +51,6 @@ jobs:
           EMAIL_FROM: ${{ secrets.EMAIL_FROM || vars.EMAIL_FROM }}
           EMAIL_TO: ${{ secrets.EMAIL_TO || vars.EMAIL_TO }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
-          ACTIVE_WINDOW_ENABLE: ${{ secrets.ACTIVE_WINDOW_ENABLE || vars.ACTIVE_WINDOW_ENABLE }}
           ACTIVE_START: ${{ secrets.ACTIVE_START || vars.ACTIVE_START }}
           ACTIVE_END: ${{ secrets.ACTIVE_END || vars.ACTIVE_END }}
           ACTIVE_BUSINESS_DAYS_ONLY: ${{ secrets.ACTIVE_BUSINESS_DAYS_ONLY || vars.ACTIVE_BUSINESS_DAYS_ONLY }}

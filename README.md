@@ -132,10 +132,9 @@ loc, company_name, ticker, price_down, price_up
 | `ALERT_RATE_LIMIT_PER_TICKER_PER_DAY` | 선택 | `2` | 1일 1종목 최대 알림 발생 제한 횟수 |
 | `ALERT_MIN_INTERVAL_MINUTES` | 선택 | `60` | 동일 종목 최소 알림 간격 (분) |
 | `ALERT_GLOBAL_DAILY_CAP` | 선택 | `100` | 전체 종목 합산 1일 최대 알림 횟수 |
-| `ACTIVE_WINDOW_ENABLE` | 선택 | `false` | 장중 특정 시간대에만 동작 여부 (`true`/`false`) |
 | `ACTIVE_START` | 선택 | `00:00` | 활성 시작 시간 (`HH:MM`) |
 | `ACTIVE_END` | 선택 | `23:59` | 활성 종료 시간 (`HH:MM`) |
-| `ACTIVE_BUSINESS_DAYS_ONLY` | 선택 | `true` | 평일(월~금)에만 알림 활성화 여부 (`true`/`false`) |
+| `ACTIVE_BUSINESS_DAYS_ONLY` | 선택 | `false` | 평일(월~금)에만 알림 활성화 여부 (`true`/`false`) |
 
 
 ### 2️⃣ 워크플로 실행 확인
