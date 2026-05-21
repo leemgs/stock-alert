@@ -69,14 +69,6 @@ def load_config(path: Path)->dict:
 
     # Slack
     c.setdefault("SLACK_USERNAME","Stock-Alert-Bot")
-    c.setdefault("SLACK_ICON_EMOJI",":bar_chart:")
-
-    # Active window
-    c.setdefault("ACTIVE_TZ", c.get("TZ","Asia/Seoul"))
-    c["ACTIVE_BUSINESS_DAYS_ONLY"] = False
-    c.setdefault("ACTIVE_START","00:00")
-    c.setdefault("ACTIVE_END","23:59")
-
     # Rate-limit (Hardcoded)
     c["ALERT_RATE_LIMIT_PER_TICKER_PER_DAY"] = 2
     c["ALERT_MIN_INTERVAL_MINUTES"] = 60
@@ -210,14 +202,7 @@ def append_history(cfg, events):
 def now_tz(tzname:str):
     return datetime.datetime.now(pytz.timezone(tzname))
 
-def within_active_window(cfg:dict)->bool:
-    tz=pytz.timezone(cfg["ACTIVE_TZ"]); now=datetime.datetime.now(tz)
-    if cfg["ACTIVE_BUSINESS_DAYS_ONLY"] and now.weekday()>=5: return False
-    def HM(s): h,m=s.split(":"); return int(h),int(m)
-    sh,sm=HM(cfg["ACTIVE_START"]); eh,em=HM(cfg["ACTIVE_END"])
-    start=now.replace(hour=sh,minute=sm,second=0,microsecond=0)
-    end=now.replace(hour=eh,minute=em,second=0,microsecond=0)
-    return start<=now<=end
+
 
 # ---------- Price fetch (requested logic) ----------
 def fetch_price(ticker: str, info_type: str = "info"):
@@ -431,9 +416,6 @@ def rl_commit(state, ticker, kind, now_dt):
 def main():
     cfg = load_config(CONFIG_PATH)
     info_type = cfg.get("INFO_TYPE", "info").lower()
-
-    if not within_active_window(cfg):
-        print(LOG_PREFIX+"비활성 시간대 — 알림/슬랙 생략"); return
 
     stocks=load_stocks(STOCKS_PATH)
     state =load_state()
