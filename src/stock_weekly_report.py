@@ -35,10 +35,12 @@ def send_email(cfg: dict, subject: str, html_body: str):
         print("[WEEKLY-REPORT] 메일 발송 설정(SMTP_HOST, SMTP_USER, SMTP_PASS, EMAIL_TO)이 누락되었습니다.")
         return
 
+    to_addrs = [x.strip() for x in to_list.split(",") if x.strip()]
+
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = cfg.get("EMAIL_FROM", user)
-    msg["To"] = to_list
+    msg["To"] = ", ".join(to_addrs)
     msg.set_content("HTML을 지원하는 이메일 클라이언트가 필요합니다.")
     msg.add_alternative(html_body, subtype="html")
 

@@ -271,12 +271,13 @@ def fetch_price(ticker: str, info_type: str = "info"):
 
 # ---------- Email / Slack ----------
 def send_email(cfg, subj, body, subtype="plain"):
+    to_addrs = [x.strip() for x in cfg["EMAIL_TO"].split(",") if x.strip()]
     msg=MIMEText(body, subtype, _charset="utf-8")
-    msg["Subject"]=subj; msg["From"]=cfg["EMAIL_FROM"]; msg["To"]=cfg["EMAIL_TO"]
+    msg["Subject"]=subj; msg["From"]=cfg["EMAIL_FROM"]; msg["To"]=", ".join(to_addrs)
     ctx=ssl.create_default_context()
     with smtplib.SMTP(cfg["SMTP_HOST"], cfg["SMTP_PORT"], timeout=20) as s:
         s.ehlo(); s.starttls(context=ctx); s.login(cfg["SMTP_USER"], cfg["SMTP_PASS"])
-        s.sendmail(cfg["EMAIL_FROM"], [cfg["EMAIL_TO"]], msg.as_string())
+        s.sendmail(cfg["EMAIL_FROM"], to_addrs, msg.as_string())
 
 def generate_html_body(cfg, ts_str, down_breaches, up_breaches, errors, rate_limited_notes):
     """

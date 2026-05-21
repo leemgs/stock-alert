@@ -70,7 +70,7 @@ vi data/stock.txt
 export SMTP_HOST=smtp.gmail.com
 export SMTP_USER=your_email@gmail.com
 export SMTP_PASS=your_app_password
-export EMAIL_TO=you@company.com
+export EMAIL_TO="you@company.com, team@company.com"
 python src/multi_stock_alert.py
 
 # 5. 크론 등록 (1시간마다)
@@ -128,7 +128,7 @@ loc, company_name, ticker, price_down, price_up
 | `SMTP_PORT` | 선택 | `587` | 발송용 이메일 포트 번호 |
 | `SMTP_USER` | 필수 | (없음) | 발송용 이메일 계정 ID |
 | `EMAIL_FROM` | 선택 | `SMTP_USER`와 동일 | 알림 발신자 주소 |
-| `EMAIL_TO` | 선택 | `root@localhost` | 알림 수신자 주소 |
+| `EMAIL_TO` | 선택 | `root@localhost` | 알림 수신자 주소 (여러 명일 경우 쉼표 `,` 로 구분) |
 | `SLACK_ENABLE` | 선택 | `false` | Slack 알림 활성화 여부 (`true`/`false`) |
 | `SLACK_SPLIT_CHANNELS` | 선택 | `false` | 상/하한 채널 분리 여부 (`true`/`false`) |
 | `UPDATE_THRESHOLD_DOWN_PERCENT`| 선택 | `10` | 하한가 자동 하향 폭 (%) |
