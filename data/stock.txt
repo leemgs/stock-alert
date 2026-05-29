@@ -10,7 +10,7 @@
 국내, Samsung Electronics, 005930.KS, 60000, 349387.50
 국내, Satoshi Holdings (deepmind), 223310.KQ, 1600, 15000.00
 국내, 대한항공, 003490.KS, 20000, 30000
-국내, 특수건설, 026150.KQ, 4833.94, 12000
+국내, 특수건설, 026150.KQ, 4350.55, 12000
 
 미국, ASML Holding N.V., ASML, 550, 1650
 미국, Alphabet Inc. Class C, GOOG, 260, 420
