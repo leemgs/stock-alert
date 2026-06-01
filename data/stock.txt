@@ -1,5 +1,5 @@
 국내, Doosan Enerbility, 034020.KS, 25000, 140000
-국내, Hyundai Motor Company, 005380.KS, 190000, 748000.00
+국내, Hyundai Motor Company, 005380.KS, 190000, 822800.00
 국내, Jeju Air, 089590.KS, 4600, 6800
 국내, Kakao Games, 293490.KQ, 8910.00, 42000
 국내, KakaoBank, 323410.KS, 20000, 29000
