@@ -1,16 +1,16 @@
 국내, Doosan Enerbility, 034020.KS, 25000, 140000
 국내, Hyundai Motor Company, 005380.KS, 190000, 822800.00
-국내, Jeju Air, 089590.KS, 4600, 6800
+국내, Jeju Air, 089590.KS, 4140.00, 6800
 국내, Kakao Games, 293490.KQ, 8910.00, 42000
 국내, KakaoBank, 323410.KS, 20000, 29000
 국내, LG Energy Solution, 373220.KS, 345000, 550000
 국내, NAVER Corporation, 035420.KS, 150000, 310000
 국내, SK hynix, 000660.KS, 230000, 2395800.00
 국내, Samsung Biologics, 207940.KS, 920000, 2300000
-국내, Samsung Electronics, 005930.KS, 60000, 349387.50
+국내, Samsung Electronics, 005930.KS, 60000, 384326.25
 국내, Satoshi Holdings (deepmind), 223310.KQ, 6400, 14000.00
 국내, 대한항공, 003490.KS, 20000, 30000
-국내, 특수건설, 026150.KQ, 4350.55, 12000
+국내, 특수건설, 026150.KQ, 3915.50, 12000
 
 미국, ASML Holding N.V., ASML, 550, 1650
 미국, Alphabet Inc. Class C, GOOG, 260, 420
