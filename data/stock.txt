@@ -12,7 +12,7 @@
 국내, 대한항공, 003490.KS, 20000, 30000
 국내, 특수건설, 026150.KQ, 3915.50, 12000
 
-미국, ASML Holding N.V., ASML, 550, 1650
+미국, ASML Holding N.V., ASML, 550, 1815.00
 미국, Alphabet Inc. Class C, GOOG, 260, 420
 미국, Amazon.com, AMZN, 100, 310
 미국, Amgen, AMGN, 210, 390
