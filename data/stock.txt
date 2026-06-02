@@ -8,7 +8,7 @@
 국내, SK hynix, 000660.KS, 230000, 2395800.00
 국내, Samsung Biologics, 207940.KS, 920000, 2300000
 국내, Samsung Electronics, 005930.KS, 60000, 349387.50
-국내, Satoshi Holdings (deepmind), 223310.KQ, 1600, 15000.00
+국내, Satoshi Holdings (deepmind), 223310.KQ, 6400, 14000.00
 국내, 대한항공, 003490.KS, 20000, 30000
 국내, 특수건설, 026150.KQ, 4350.55, 12000
 
