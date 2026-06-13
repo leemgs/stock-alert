@@ -7,6 +7,7 @@ from email.message import EmailMessage
 import yfinance as yf
 from datetime import datetime
 import pytz
+import requests
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 STOCK_TXT_PATH = BASE_DIR / "data" / "stock.txt"
@@ -58,6 +59,35 @@ def send_email(cfg: dict, subject: str, html_body: str):
         print(f"[WEEKLY-REPORT] 이메일 발송 성공: {to_list}")
     except Exception as e:
         print(f"[WEEKLY-REPORT] 이메일 발송 실패: {e}")
+
+def create_github_issue(cfg: dict, subject: str, body_markdown: str):
+    token = os.environ.get("GITHUB_TOKEN") or cfg.get("GITHUB_TOKEN")
+    if not token:
+        print("[WEEKLY-REPORT] GITHUB_TOKEN이 설정되지 않아 깃허브 이슈를 생성하지 않습니다.")
+        return
+
+    repo = os.environ.get("GITHUB_REPOSITORY") or cfg.get("GITHUB_REPOSITORY") or "leemgs/stock-alert"
+    url = f"https://api.github.com/repos/{repo}/issues"
+    
+    headers = {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    
+    payload = {
+        "title": subject,
+        "body": body_markdown
+    }
+    
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=15)
+        if response.status_code == 201:
+            issue_url = response.json().get("html_url")
+            print(f"[WEEKLY-REPORT] 깃허브 이슈 생성 성공: {issue_url}")
+        else:
+            print(f"[WEEKLY-REPORT] 깃허브 이슈 생성 실패: {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"[WEEKLY-REPORT] 깃허브 이슈 생성 중 에러 발생: {e}")
 
 def get_weekly_data(tickers):
     results = []
@@ -115,6 +145,11 @@ def main():
     
     kst = datetime.now(pytz.timezone("Asia/Seoul"))
     date_str = kst.strftime("%Y-%m-%d %H:%M")
+    
+    md_body = f"## 📈 주간 주식 동향 요약\n"
+    md_body += f"**기준일:** {date_str} (최근 5영업일 기준)\n\n"
+    md_body += "| 종목명 (티커) | 시작가 | 현재가 (종가) | 주간 등락률 |\n"
+    md_body += "| :--- | :--- | :--- | :--- |\n"
     
     html = f"""
     <html>
@@ -185,6 +220,8 @@ def main():
                     </tr>
         """
         
+        md_body += f"| **{name}** ({t}) | {start_str} | {end_str} | {sign} {abs(chg):.2f}% |\n"
+        
     html += """
                 </tbody>
             </table>
@@ -199,6 +236,7 @@ def main():
     
     subject = f"[Stock Alert] 주간 주식 증감 추이 요약 리포트 ({date_str})"
     send_email(cfg, subject, html)
+    create_github_issue(cfg, subject, md_body)
 
 if __name__ == "__main__":
     try: main()

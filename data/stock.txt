@@ -22,6 +22,7 @@
 미국, NVIDIA Corporation, NVDA, 150, 600
 미국, Oracle Corporation, ORCL, 100, 300
 미국, Tesla Inc., TSLA, 250, 500
+미국, SpaceX, SPCX, 100, 300
 미국, The Walt Disney Company, DIS, 80, 150
 
 암호화폐, Bitcoin, BTC-USD, 30000, 120000
