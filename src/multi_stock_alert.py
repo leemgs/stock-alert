@@ -123,11 +123,11 @@ def load_stocks(path:Path):
             line=raw.strip()
             if not line or line.startswith("#"): continue
             parts=[p.strip() for p in line.split(",") ]
-            while len(parts)<5: parts.append("")
-            loc,name,ticker,down_str,up_str = parts[:5]
+            while len(parts)<6: parts.append("")
+            loc,name,ticker,down_str,up_str,desc = parts[:6]
             down=parse_float_or_none(down_str); up=parse_float_or_none(up_str)
             if down is None and up is None: continue
-            items.append({"loc":loc,"name":name,"ticker":ticker,"down":down,"up":up})
+            items.append({"loc":loc,"name":name,"ticker":ticker,"down":down,"up":up,"desc":desc})
     return items
 
 def load_state():
@@ -142,6 +142,8 @@ def load_state():
     }
 
 def save_state(st): STATE_PATH.write_text(json.dumps(st,ensure_ascii=False),encoding="utf-8")
+
+
 
 def update_stock_file(path: Path, updates: dict):
     """
@@ -165,8 +167,8 @@ def update_stock_file(path: Path, updates: dict):
                 ticker = parts[2]
                 if ticker in updates:
                     upd = updates[ticker]
-                    # loc, name, ticker, down, up
-                    while len(parts) < 5: parts.append("")
+                    # loc, name, ticker, down, up, desc
+                    while len(parts) < 6: parts.append("")
                     
                     if 'down' in upd and upd['down'] is not None:
                         parts[3] = f"{upd['down']:.2f}"
@@ -289,10 +291,12 @@ def generate_html_body(cfg, ts_str, down_breaches, up_breaches, errors, rate_lim
     down_pct = cfg.get("UPDATE_THRESHOLD_DOWN_PERCENT", 10)
     if down_breaches:
         down_html = '<div class="section-title down-title">📉 하한 돌파 (현재가 ≤ 하한)</div>'
-        for n, t, p, th, nth in down_breaches:
+        for n, t, p, th, nth, desc in down_breaches:
+            desc_div = f'<div class="description" style="font-size: 13px; color: #666; margin-top: 4px; margin-bottom: 8px;"><strong>설명:</strong> {desc}</div>' if desc else ''
             down_html += f"""
             <div class="alert-card">
                 <div class="ticker">{n} <span style="color:#7f8c8d; font-weight:normal;">({t})</span></div>
+                {desc_div}
                 <div class="price-info">
                     현재가 <span class="price-value" style="color:#3498db;">{p:.2f}</span> ≤ 하한가 <span class="price-value">{th:.2f}</span> ({down_pct:g}% 자동 하향:{nth:.2f})
                 </div>
@@ -303,10 +307,12 @@ def generate_html_body(cfg, ts_str, down_breaches, up_breaches, errors, rate_lim
     up_html = ""
     if up_breaches:
         up_html = '<div class="section-title up-title">📈 상한 돌파 (현재가 ≥ 상한)</div>'
-        for n, t, p, th, nth in up_breaches:
+        for n, t, p, th, nth, desc in up_breaches:
+            desc_div = f'<div class="description" style="font-size: 13px; color: #666; margin-top: 4px; margin-bottom: 8px;"><strong>설명:</strong> {desc}</div>' if desc else ''
             up_html += f"""
             <div class="alert-card">
                 <div class="ticker">{n} <span style="color:#7f8c8d; font-weight:normal;">({t})</span></div>
+                {desc_div}
                 <div class="price-info">
                     현재가 <span class="price-value" style="color:#e74c3c;">{p:.2f}</span> ≥ 상한가 <span class="price-value">{th:.2f}</span> ({up_pct:g}% 자동 상향:{nth:.2f})
                 </div>
@@ -451,7 +457,7 @@ def main():
                         # [Mission] Update threshold
                         down_pct = cfg["UPDATE_THRESHOLD_DOWN_PERCENT"]
                         new_val = dth * (1.0 - (down_pct / 100.0))
-                        down_breaches.append((s["name"], tkr, price, dth, new_val))
+                        down_breaches.append((s["name"], tkr, price, dth, new_val, s.get("desc", "")))
                         state["last_alert_date"][f"{tkr}|down"]=today
                         rl_commit(state, tkr, "down", ts)
                         new_events.append({"ts":ts_str,"dir":"down","name":s["name"],"ticker":tkr,"price":price,"threshold":dth})
@@ -477,7 +483,7 @@ def main():
                         # [Mission] Update threshold
                         up_pct = cfg["UPDATE_THRESHOLD_UP_PERCENT"]
                         new_val = uth * (1.0 + (up_pct / 100.0))
-                        up_breaches.append((s["name"], tkr, price, uth, new_val))
+                        up_breaches.append((s["name"], tkr, price, uth, new_val, s.get("desc", "")))
                         state["last_alert_date"][f"{tkr}|up"]=today
                         rl_commit(state, tkr, "up", ts)
                         new_events.append({"ts":ts_str,"dir":"up","name":s["name"],"ticker":tkr,"price":price,"threshold":uth})
@@ -508,9 +514,15 @@ def main():
             down_pct = cfg.get("UPDATE_THRESHOLD_DOWN_PERCENT", 10)
             up_pct = cfg.get("UPDATE_THRESHOLD_UP_PERCENT", 10)
             if down_breaches:
-                rows += [f"- *{n}* `{t}`: 현재가 `{p:.2f}` ≤ 하한가 `{th:.2f}` ({down_pct:g}% 자동 하향:`{nth:.2f}`)" for n,t,p,th,nth in down_breaches]
+                rows += [
+                    f"- *{n}* `{t}` ({desc}): 현재가 `{p:.2f}` ≤ 하한가 `{th:.2f}` ({down_pct:g}% 자동 하향:`{nth:.2f}`)" if desc else f"- *{n}* `{t}`: 현재가 `{p:.2f}` ≤ 하한가 `{th:.2f}` ({down_pct:g}% 자동 하향:`{nth:.2f}`)"
+                    for n, t, p, th, nth, desc in down_breaches
+                ]
             if up_breaches:
-                rows += [f"- *{n}* `{t}`: 현재가 `{p:.2f}` ≥ 상한가 `{th:.2f}` ({up_pct:g}% 자동 상향:`{nth:.2f}`)" for n,t,p,th,nth in up_breaches]
+                rows += [
+                    f"- *{n}* `{t}` ({desc}): 현재가 `{p:.2f}` ≥ 상한가 `{th:.2f}` ({up_pct:g}% 자동 상향:`{nth:.2f}`)" if desc else f"- *{n}* `{t}`: 현재가 `{p:.2f}` ≥ 상한가 `{th:.2f}` ({up_pct:g}% 자동 상향:`{nth:.2f}`)"
+                    for n, t, p, th, nth, desc in up_breaches
+                ]
             blocks = slack_blocks_header(ts_str) +                          slack_blocks_section("임계 도달 종목 (상/하한)", rows)
             if errors or rate_limited_notes:
                 blocks.append({"type":"divider"})
