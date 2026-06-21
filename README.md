@@ -175,7 +175,7 @@ gh workflow run "Weekly Stock Report (Saturday 9 AM)"
 - **하한 돌파**: 신중한 파란색 카드로 강조
 - **반응형 디자인**: 모바일 및 데스크톱 이메일 클라이언트 최적화
 
-<img src="img/screenshot.png" alt="Stock Alert Email Screenshot" width="600" />
+<img src="img/gmail-stock-alert.jpg" alt="Stock Alert Email Screenshot" width="600" />
 
 ```text
 Subject: [Stock Alert] 임계 도달 종목 (상/하한)
