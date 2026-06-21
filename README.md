@@ -65,11 +65,10 @@ pip install -r requirements.txt
 # 3. 주식 임계값 파일 작성
 vi data/stock.txt
 
-# 4. 환경 변수 세팅 후 테스트 실행
-export SMTP_HOST=smtp.gmail.com
-export SMTP_USER=your_email@gmail.com
+# 4. 이메일 설정 및 실행 테스트
+# (1) data/email.json 파일에 이메일 정보 설정 (아래 4.1 참고)
+# (2) SMTP 비밀번호 환경변수 설정 후 실행
 export SMTP_PASS=your_app_password
-export EMAIL_TO="you@company.com, team@company.com"
 python src/multi_stock_alert.py
 
 # 5. 크론 등록 (1시간마다)
@@ -90,13 +89,28 @@ loc, company_name, ticker, price_down, price_up
 미국, Tesla, TSLA, 150, 350
 ```
 
-### 환경 변수 (Environment Variables)
+### `email.json` (이메일 설정 파일)
 
-실행에 필요한 설정은 **환경 변수**를 통해 주입합니다.
-로컬 실행 시에는 `.env.example` 파일을 참고하여 `export`로 환경 변수를 적용하시고, GitHub Actions 실행 시에는 **Repository Secrets/Variables**에 등록하여 사용하세요.
-*(https://github.com/leemgs/stock-alert/settings/secrets/actions 참고)*
+유지보수 및 운영 편의성을 위해 민감정보인 `SMTP_PASS`를 제외한 나머지 이메일/SMTP 설정은 `./data/email.json` 파일에서 관리합니다.
 
-자세한 환경 변수 목록과 설명은 [`.env.example`](.env.example) 파일을 확인해 주세요.
+```json
+{
+  "_comment": "receiver의 이메일 주소는 회사 이메일의 경우에 회사 방화벽에서 이메일의 수신자체를 막거나, 스팸함으로 분류되는 경우가 많습니다.",
+  "smtp_host": "smtp.gmail.com",
+  "smtp_port": 587,
+  "smtp_user": "leemgs@gmail.com",
+  "sender": "leemgs@gmail.com",
+  "receivers": [
+    "leemgs@gmail.com",
+    "khs7516@gmail.com"
+  ]
+}
+```
+
+### 환경 변수 및 GitHub Secrets
+
+* **`SMTP_PASS`**: 보안 유지를 위해 환경변수(로컬 실행 시) 또는 **GitHub Secrets**(GitHub Actions 실행 시)로 설정합니다.
+* **`SLACK_WEBHOOK_URL`**: Slack 알림 연동을 원할 경우 환경변수 또는 **GitHub Secrets**에 등록하여 사용합니다.
 
 ---
 
@@ -110,7 +124,7 @@ loc, company_name, ticker, price_down, price_up
 
 ### 1️⃣ Secrets 및 Variables 등록 (Settings → Secrets and variables → Actions)
 
-보안이 필요한 암호화된 정보는 **Secrets**에, 그 외의 일반적인 설정 정보는 **Variables**에 등록하는 것을 권장합니다. (단, 기존처럼 모두 Secrets에 등록해도 무방합니다.)
+이메일 설정을 `./data/email.json` 파일에서 관리하게 됨으로써, GitHub 설정에서는 **`SMTP_PASS`** (이메일 비밀번호) 및 **`SLACK_WEBHOOK_URL`** 만 **Repository Secrets**에 등록하시면 됩니다.
 
 #### 🔒 Repository Secrets (보안 정보)
 | Key | 필수여부 | 기본값(Default) | 설명 |
@@ -121,11 +135,6 @@ loc, company_name, ticker, price_down, price_up
 #### ⚙️ Repository Variables (일반 설정 정보)
 | Key | 필수여부 | 기본값(Default) | 설명 |
 | --- | --- | --- | --- |
-| `SMTP_HOST` | 필수 | (없음) | 발송용 이메일 서버 (예: `smtp.gmail.com`) |
-| `SMTP_PORT` | 선택 | `587` | 발송용 이메일 포트 번호 |
-| `SMTP_USER` | 필수 | (없음) | 발송용 이메일 계정 ID |
-| `EMAIL_FROM` | 선택 | `SMTP_USER`와 동일 | 알림 발신자 주소 |
-| `EMAIL_TO` | 선택 | `root@localhost` | 알림 수신자 주소 (여러 명일 경우 쉼표 `,` 로 구분) |
 | `UPDATE_THRESHOLD_DOWN_PERCENT`| 선택 | `10` | 하한가 자동 하향 폭 (%) |
 | `UPDATE_THRESHOLD_UP_PERCENT` | 선택 | `10` | 상한가 자동 상향 폭 (%) |
 

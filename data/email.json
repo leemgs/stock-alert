@@ -1,0 +1,11 @@
+{
+  "_comment": "receiver의 이메일 주소는 회사 이메일의 경우에 회사 방화벽에서 이메일의 수신자체를 막거나, 스팸함으로 분류되는 경우가 많습니다.",
+  "smtp_host": "smtp.gmail.com",
+  "smtp_port": 587,
+  "smtp_user": "leemgs@gmail.com",
+  "sender": "leemgs@gmail.com",
+  "receivers": [
+    "leemgs@gmail.com",
+    "khs7516@gmail.com"
+  ]
+}

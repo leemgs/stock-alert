@@ -21,6 +21,40 @@ def load_kv() -> dict:
 
 def load_config() -> dict:
     c = load_kv()
+    
+    # email.json 로드하여 병합 (존재하는 경우)
+    email_json_path = BASE_DIR / "data" / "email.json"
+    if email_json_path.exists():
+        try:
+            import json
+            with open(email_json_path, "r", encoding="utf-8") as f:
+                email_cfg = json.load(f)
+                if "smtp_host" in email_cfg: c["SMTP_HOST"] = email_cfg["smtp_host"]
+                if "smtp_port" in email_cfg: c["SMTP_PORT"] = str(email_cfg["smtp_port"])
+                if "smtp_user" in email_cfg: c["SMTP_USER"] = email_cfg["smtp_user"]
+                
+                # sender -> EMAIL_FROM
+                if "sender" in email_cfg: 
+                    c["EMAIL_FROM"] = email_cfg["sender"]
+                elif "smtp_user" in email_cfg:
+                    c["EMAIL_FROM"] = email_cfg["smtp_user"]
+                
+                # receivers -> EMAIL_TO
+                if "receivers" in email_cfg:
+                    receivers = email_cfg["receivers"]
+                    if isinstance(receivers, list):
+                        c["EMAIL_TO"] = ",".join(receivers)
+                    else:
+                        c["EMAIL_TO"] = str(receivers)
+        except Exception as e:
+            print(f"[ERROR] 이메일 설정 파일(email.json) 파싱 실패: {e}", file=sys.stderr)
+
+    # 환경변수가 명시적으로 지정된 경우 최우선 적용 (기존 환경변수 동작 보장)
+    for env_k, env_v in os.environ.items():
+        if env_v.strip() != "":
+            if env_k in {"SMTP_HOST", "SMTP_PORT", "SMTP_USER", "EMAIL_FROM", "EMAIL_TO", "SMTP_PASS"}:
+                c[env_k] = env_v.strip()
+
     c.setdefault("SMTP_PORT", "587")
     c["SMTP_PORT"] = int(c["SMTP_PORT"])
     return c
@@ -142,15 +176,96 @@ def main():
     weekly_data.sort(key=lambda x: x["change"], reverse=True)
     
     ticker_to_name = {s["ticker"]: s["name"] for s in stocks}
-    
+    ticker_to_domain = {s["ticker"]: s["loc"] for s in stocks}
+
+    # Group weekly_data by domain
+    data_by_domain = {}
+    for item in weekly_data:
+        t = item["ticker"]
+        domain = ticker_to_domain.get(t, "기타")
+        data_by_domain.setdefault(domain, []).append(item)
+
+    # Preserve exact order of domains as they appear in stock.txt
+    domains_ordered = []
+    for s in stocks:
+        if s["loc"] not in domains_ordered:
+            domains_ordered.append(s["loc"])
+    # Any other domains in data that were not in stocks (fallback)
+    for domain in data_by_domain.keys():
+        if domain not in domains_ordered:
+            domains_ordered.append(domain)
+
     kst = datetime.now(pytz.timezone("Asia/Seoul"))
     date_str = kst.strftime("%Y-%m-%d %H:%M")
     
     md_body = f"## 📈 주간 주식 동향 요약\n"
     md_body += f"**기준일:** {date_str} (최근 5영업일 기준)\n\n"
-    md_body += "| 종목명 (티커) | 시작가 | 현재가 (종가) | 주간 등락률 |\n"
-    md_body += "| :--- | :--- | :--- | :--- |\n"
-    
+
+    html_tables = ""
+
+    for domain in domains_ordered:
+        items = data_by_domain.get(domain, [])
+        if not items:
+            continue
+            
+        md_body += f"### 📂 {domain}\n\n"
+        md_body += "| 종목명 (티커) | 시작가 | 현재가 (종가) | 주간 등락률 |\n"
+        md_body += "| :--- | :--- | :--- | :--- |\n"
+
+        html_tables += f"""
+            <h3 style="color: #2c3e50; margin-top: 25px; margin-bottom: 10px; border-left: 4px solid #3498db; padding-left: 8px;">📂 {domain}</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">종목명 (티커)</th>
+                        <th style="width: 20%;">시작가</th>
+                        <th style="width: 20%;">현재가 (종가)</th>
+                        <th style="width: 20%;">주간 등락률</th>
+                    </tr>
+                </thead>
+                <tbody>
+        """
+        
+        # Sort items in this domain by change descending
+        items.sort(key=lambda x: x["change"], reverse=True)
+        
+        for item in items:
+            t = item["ticker"]
+            name = ticker_to_name.get(t, t)
+            chg = item["change"]
+            start_p = item["start"]
+            end_p = item["end"]
+            
+            if chg > 0:
+                color_class = "positive"
+                sign = "▲"
+            elif chg < 0:
+                color_class = "negative"
+                sign = "▼"
+            else:
+                color_class = "neutral"
+                sign = "-"
+                
+            start_str = f"{start_p:,.0f}" if start_p > 1000 else f"{start_p:,.2f}"
+            end_str = f"{end_p:,.0f}" if end_p > 1000 else f"{end_p:,.2f}"
+            
+            html_tables += f"""
+                        <tr>
+                            <td><strong>{name}</strong> <span style="color:#7f8c8d; font-size:12px;">({t})</span></td>
+                            <td>{start_str}</td>
+                            <td>{end_str}</td>
+                            <td class="{color_class}">{sign} {abs(chg):.2f}%</td>
+                        </tr>
+            """
+            
+            md_body += f"| **{name}** ({t}) | {start_str} | {end_str} | {sign} {abs(chg):.2f}% |\n"
+            
+        html_tables += """
+                </tbody>
+            </table>
+        """
+        md_body += "\n"
+
     html = f"""
     <html>
     <head>
@@ -160,7 +275,7 @@ def main():
             .container {{ max-width: 700px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }}
             h2 {{ color: #2c3e50; font-size: 24px; margin-bottom: 5px; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; }}
             .meta {{ font-size: 14px; color: #7f8c8d; margin-bottom: 20px; }}
-            table {{ width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }}
+            table {{ width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; font-size: 14px; }}
             th, td {{ padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }}
             th {{ background-color: #f8f9fa; color: #2c3e50; font-weight: bold; font-size: 13px; }}
             tr:hover {{ background-color: #f5f5f5; }}
@@ -175,56 +290,7 @@ def main():
             <h2>📈 주간 주식 동향 요약</h2>
             <div class="meta">기준일: {date_str} (최근 5영업일 기준)</div>
             
-            <table>
-                <thead>
-                    <tr>
-                        <th>종목명 (티커)</th>
-                        <th>시작가</th>
-                        <th>현재가 (종가)</th>
-                        <th>주간 등락률</th>
-                    </tr>
-                </thead>
-                <tbody>
-    """
-    
-    for item in weekly_data:
-        t = item["ticker"]
-        name = ticker_to_name.get(t, t)
-        chg = item["change"]
-        start_p = item["start"]
-        end_p = item["end"]
-        
-        if chg > 0:
-            color_class = "positive"
-            sign = "▲"
-        elif chg < 0:
-            color_class = "negative"
-            sign = "▼"
-        else:
-            color_class = "neutral"
-            sign = "-"
-            
-        # 소수점 가격 처리를 위해 숫자가 너무 클경우(원화) 소수점을 없앰
-        start_str = f"{{start_p:,.0f}}" if start_p > 1000 else f"{{start_p:,.2f}}"
-        end_str = f"{{end_p:,.0f}}" if end_p > 1000 else f"{{end_p:,.2f}}"
-        
-        start_str = start_str.format(start_p=start_p)
-        end_str = end_str.format(end_p=end_p)
-        
-        html += f"""
-                    <tr>
-                        <td><strong>{name}</strong> <span style="color:#7f8c8d; font-size:12px;">({t})</span></td>
-                        <td>{start_str}</td>
-                        <td>{end_str}</td>
-                        <td class="{color_class}">{sign} {abs(chg):.2f}%</td>
-                    </tr>
-        """
-        
-        md_body += f"| **{name}** ({t}) | {start_str} | {end_str} | {sign} {abs(chg):.2f}% |\n"
-        
-    html += """
-                </tbody>
-            </table>
+            {html_tables}
             
             <div class="footer">
                 Stock Alert &copy; Automated Weekly Report

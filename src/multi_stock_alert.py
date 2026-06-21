@@ -58,6 +58,39 @@ def load_kv(path: Path) -> dict:
 
 def load_config(path: Path)->dict:
     c = load_kv(path)
+    
+    # email.json 로드하여 병합 (존재하는 경우)
+    email_json_path = path.parent / "email.json"
+    if email_json_path.exists():
+        try:
+            with open(email_json_path, "r", encoding="utf-8") as f:
+                email_cfg = json.load(f)
+                if "smtp_host" in email_cfg: c["SMTP_HOST"] = email_cfg["smtp_host"]
+                if "smtp_port" in email_cfg: c["SMTP_PORT"] = str(email_cfg["smtp_port"])
+                if "smtp_user" in email_cfg: c["SMTP_USER"] = email_cfg["smtp_user"]
+                
+                # sender -> EMAIL_FROM
+                if "sender" in email_cfg: 
+                    c["EMAIL_FROM"] = email_cfg["sender"]
+                elif "smtp_user" in email_cfg:
+                    c["EMAIL_FROM"] = email_cfg["smtp_user"]
+                
+                # receivers -> EMAIL_TO
+                if "receivers" in email_cfg:
+                    receivers = email_cfg["receivers"]
+                    if isinstance(receivers, list):
+                        c["EMAIL_TO"] = ",".join(receivers)
+                    else:
+                        c["EMAIL_TO"] = str(receivers)
+        except Exception as e:
+            print(f"[ERROR] 이메일 설정 파일(email.json) 파싱 실패: {e}", file=sys.stderr)
+
+    # 환경변수가 명시적으로 지정된 경우 최우선 적용 (기존 환경변수 동작 보장)
+    for env_k, env_v in os.environ.items():
+        if env_v.strip() != "":
+            if env_k in {"SMTP_HOST", "SMTP_PORT", "SMTP_USER", "EMAIL_FROM", "EMAIL_TO", "SMTP_PASS"}:
+                c[env_k] = env_v.strip()
+
     # defaults
     c.setdefault("SMTP_PORT","587")
     c.setdefault("EMAIL_FROM", c.get("SMTP_USER","stock-alert@example.com"))
@@ -291,33 +324,47 @@ def generate_html_body(cfg, ts_str, down_breaches, up_breaches, errors, rate_lim
     down_pct = cfg.get("UPDATE_THRESHOLD_DOWN_PERCENT", 10)
     if down_breaches:
         down_html = '<div class="section-title down-title">📉 하한 돌파 (현재가 ≤ 하한)</div>'
-        for n, t, p, th, nth, desc in down_breaches:
-            desc_div = f'<div class="description" style="font-size: 13px; color: #666; margin-top: 4px; margin-bottom: 8px;"><strong>설명:</strong> {desc}</div>' if desc else ''
-            down_html += f"""
-            <div class="alert-card">
-                <div class="ticker">{n} <span style="color:#7f8c8d; font-weight:normal;">({t})</span></div>
-                {desc_div}
-                <div class="price-info">
-                    현재가 <span class="price-value" style="color:#3498db;">{p:.2f}</span> ≤ 하한가 <span class="price-value">{th:.2f}</span> ({down_pct:g}% 자동 하향:{nth:.2f})
+        # Group by domain
+        down_by_domain = {}
+        for loc, n, t, p, th, nth, desc in down_breaches:
+            down_by_domain.setdefault(loc, []).append((n, t, p, th, nth, desc))
+            
+        for domain, items in down_by_domain.items():
+            down_html += f'<div style="font-weight: bold; margin-top: 15px; margin-bottom: 8px; color: #2c3e50; font-size: 15px; border-left: 3px solid #3498db; padding-left: 8px;">📂 {domain}</div>'
+            for n, t, p, th, nth, desc in items:
+                desc_div = f'<div class="description" style="font-size: 13px; color: #666; margin-top: 4px; margin-bottom: 8px;"><strong>설명:</strong> {desc}</div>' if desc else ''
+                down_html += f"""
+                <div class="alert-card" style="margin-left: 10px;">
+                    <div class="ticker">{n} <span style="color:#7f8c8d; font-weight:normal;">({t})</span></div>
+                    {desc_div}
+                    <div class="price-info">
+                        현재가 <span class="price-value" style="color:#3498db;">{p:.2f}</span> ≤ 하한가 <span class="price-value">{th:.2f}</span> ({down_pct:g}% 자동 하향:{nth:.2f})
+                    </div>
                 </div>
-            </div>
-            """
+                """
 
     up_pct = cfg.get("UPDATE_THRESHOLD_UP_PERCENT", 10)
     up_html = ""
     if up_breaches:
         up_html = '<div class="section-title up-title">📈 상한 돌파 (현재가 ≥ 상한)</div>'
-        for n, t, p, th, nth, desc in up_breaches:
-            desc_div = f'<div class="description" style="font-size: 13px; color: #666; margin-top: 4px; margin-bottom: 8px;"><strong>설명:</strong> {desc}</div>' if desc else ''
-            up_html += f"""
-            <div class="alert-card">
-                <div class="ticker">{n} <span style="color:#7f8c8d; font-weight:normal;">({t})</span></div>
-                {desc_div}
-                <div class="price-info">
-                    현재가 <span class="price-value" style="color:#e74c3c;">{p:.2f}</span> ≥ 상한가 <span class="price-value">{th:.2f}</span> ({up_pct:g}% 자동 상향:{nth:.2f})
+        # Group by domain
+        up_by_domain = {}
+        for loc, n, t, p, th, nth, desc in up_breaches:
+            up_by_domain.setdefault(loc, []).append((n, t, p, th, nth, desc))
+            
+        for domain, items in up_by_domain.items():
+            up_html += f'<div style="font-weight: bold; margin-top: 15px; margin-bottom: 8px; color: #2c3e50; font-size: 15px; border-left: 3px solid #e74c3c; padding-left: 8px;">📂 {domain}</div>'
+            for n, t, p, th, nth, desc in items:
+                desc_div = f'<div class="description" style="font-size: 13px; color: #666; margin-top: 4px; margin-bottom: 8px;"><strong>설명:</strong> {desc}</div>' if desc else ''
+                up_html += f"""
+                <div class="alert-card" style="margin-left: 10px;">
+                    <div class="ticker">{n} <span style="color:#7f8c8d; font-weight:normal;">({t})</span></div>
+                    {desc_div}
+                    <div class="price-info">
+                        현재가 <span class="price-value" style="color:#e74c3c;">{p:.2f}</span> ≥ 상한가 <span class="price-value">{th:.2f}</span> ({up_pct:g}% 자동 상향:{nth:.2f})
+                    </div>
                 </div>
-            </div>
-            """
+                """
 
     error_html = ""
     if errors:
@@ -457,7 +504,7 @@ def main():
                         # [Mission] Update threshold
                         down_pct = cfg["UPDATE_THRESHOLD_DOWN_PERCENT"]
                         new_val = dth * (1.0 - (down_pct / 100.0))
-                        down_breaches.append((s["name"], tkr, price, dth, new_val, s.get("desc", "")))
+                        down_breaches.append((s["loc"], s["name"], tkr, price, dth, new_val, s.get("desc", "")))
                         state["last_alert_date"][f"{tkr}|down"]=today
                         rl_commit(state, tkr, "down", ts)
                         new_events.append({"ts":ts_str,"dir":"down","name":s["name"],"ticker":tkr,"price":price,"threshold":dth})
@@ -483,7 +530,7 @@ def main():
                         # [Mission] Update threshold
                         up_pct = cfg["UPDATE_THRESHOLD_UP_PERCENT"]
                         new_val = uth * (1.0 + (up_pct / 100.0))
-                        up_breaches.append((s["name"], tkr, price, uth, new_val, s.get("desc", "")))
+                        up_breaches.append((s["loc"], s["name"], tkr, price, uth, new_val, s.get("desc", "")))
                         state["last_alert_date"][f"{tkr}|up"]=today
                         rl_commit(state, tkr, "up", ts)
                         new_events.append({"ts":ts_str,"dir":"up","name":s["name"],"ticker":tkr,"price":price,"threshold":uth})
@@ -510,20 +557,41 @@ def main():
 
         url = cfg.get("SLACK_WEBHOOK_URL")
         if url:
-            rows=[]
+            blocks = slack_blocks_header(ts_str)
+            
+            # Group down breaches by domain
+            down_by_domain = {}
+            for loc, n, t, p, th, nth, desc in down_breaches:
+                down_by_domain.setdefault(loc, []).append((n, t, p, th, nth, desc))
+                
+            # Group up breaches by domain
+            up_by_domain = {}
+            for loc, n, t, p, th, nth, desc in up_breaches:
+                up_by_domain.setdefault(loc, []).append((n, t, p, th, nth, desc))
+
             down_pct = cfg.get("UPDATE_THRESHOLD_DOWN_PERCENT", 10)
             up_pct = cfg.get("UPDATE_THRESHOLD_UP_PERCENT", 10)
+
+            # Add down breaches to blocks
             if down_breaches:
-                rows += [
-                    f"- *{n}* `{t}` ({desc}): 현재가 `{p:.2f}` ≤ 하한가 `{th:.2f}` ({down_pct:g}% 자동 하향:`{nth:.2f}`)" if desc else f"- *{n}* `{t}`: 현재가 `{p:.2f}` ≤ 하한가 `{th:.2f}` ({down_pct:g}% 자동 하향:`{nth:.2f}`)"
-                    for n, t, p, th, nth, desc in down_breaches
-                ]
+                blocks.append({"type": "section", "text": {"type": "mrkdwn", "text": "*📉 하한 돌파 (현재가 ≤ 하한)*"}})
+                for domain, items in down_by_domain.items():
+                    domain_rows = []
+                    for n, t, p, th, nth, desc in items:
+                        item_str = f"- *{n}* `{t}` ({desc}): 현재가 `{p:.2f}` ≤ 하한가 `{th:.2f}` ({down_pct:g}% 자동 하향:`{nth:.2f}`)" if desc else f"- *{n}* `{t}`: 현재가 `{p:.2f}` ≤ 하한가 `{th:.2f}` ({down_pct:g}% 자동 하향:`{nth:.2f}`)"
+                        domain_rows.append(item_str)
+                    blocks += slack_blocks_section(f"📂 {domain}", domain_rows)
+
+            # Add up breaches to blocks
             if up_breaches:
-                rows += [
-                    f"- *{n}* `{t}` ({desc}): 현재가 `{p:.2f}` ≥ 상한가 `{th:.2f}` ({up_pct:g}% 자동 상향:`{nth:.2f}`)" if desc else f"- *{n}* `{t}`: 현재가 `{p:.2f}` ≥ 상한가 `{th:.2f}` ({up_pct:g}% 자동 상향:`{nth:.2f}`)"
-                    for n, t, p, th, nth, desc in up_breaches
-                ]
-            blocks = slack_blocks_header(ts_str) +                          slack_blocks_section("임계 도달 종목 (상/하한)", rows)
+                blocks.append({"type": "section", "text": {"type": "mrkdwn", "text": "*📈 상한 돌파 (현재가 ≥ 상한)*"}})
+                for domain, items in up_by_domain.items():
+                    domain_rows = []
+                    for n, t, p, th, nth, desc in items:
+                        item_str = f"- *{n}* `{t}` ({desc}): 현재가 `{p:.2f}` ≥ 상한가 `{th:.2f}` ({up_pct:g}% 자동 상향:`{nth:.2f}`)" if desc else f"- *{n}* `{t}`: 현재가 `{p:.2f}` ≥ 상한가 `{th:.2f}` ({up_pct:g}% 자동 상향:`{nth:.2f}`)"
+                        domain_rows.append(item_str)
+                    blocks += slack_blocks_section(f"📂 {domain}", domain_rows)
+
             if errors or rate_limited_notes:
                 blocks.append({"type":"divider"})
                 if errors:
