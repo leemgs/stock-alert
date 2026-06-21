@@ -79,12 +79,14 @@ python src/multi_stock_alert.py
 
 ### `stock.txt`
 
+이메일/Slack 감시 및 카테고리 분류를 위해 종목 리스트를 `./data/stock.txt`에 작성합니다. 첫 번째 컬럼(`domain`)에는 종목의 분류(AI, SW, IT, 로봇, 전력, 농업, 건설, 바이오, 기타 등)를 작성합니다.
+
 ```csv
-loc, company_name, ticker, price_down, price_up
-국내, Samsung Electronics, 005930.KS, 60000, 90000
-국내, SK hynix, 000660.KS, 140000, 220000
-미국, Nvidia, NVDA, 400, 1200
-미국, Tesla, TSLA, 150, 350
+domain, company_name, ticker, price_down, price_up, description
+AI, Alphabet Inc. Class C, GOOG, 260.00, 420.00, 구글 검색/안드로이드/유튜브 및 AI 연구(DeepMind)
+SW, Microsoft, MSFT, 300.00, 600.00, OS(Windows)/클라우드(Azure)/오피스 소프트웨어 및 생성형 AI(Copilot)
+IT, Samsung Electronics, 005930.KS, 60000.00, 384326.25, 메모리 반도체/스마트폰/디스플레이 및 가전 글로벌 선도 기업
+로봇, 두산로보틱스, 454910.KS, 88000.00, 132000.00, 협동로봇 - 글로벌 최고 수준의 협동로봇 및 스마트 팩토리 자동화 솔루션
 ```
 
 ### `email.json` (이메일 설정 파일)
