@@ -5,8 +5,6 @@
 
 **자동 주식 임계가(상한/하한) 감시 및 이메일·Slack 알림 시스템**
 
-<img src="img/gmail-stock-alert.jpg" alt="Stock Alert Preview" width="600" />
-
 본 프로젝트는
 
 * 국내(KOSPI/KOSDAQ) 및 해외(NASDAQ/NYSE/HK/VN 등) 주요 종목의 실시간 가격을 감시하고,
