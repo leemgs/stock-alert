@@ -47,7 +47,7 @@ IT, Tencent Holdings, 0700.HK, 250, 700, 중국 최대 소셜 미디어(WeChat)/
 
 # === 농업 ===
 농업, 대동, 000490.KS, 6300.00, 15000.00, 국내 대표 농기계 및 스마트 모빌리티 기업 | 자율주행 농기계(온디바이스 AI 트랙터) 및 대동로보틱스 중심의 다목적 농업용·물류 로봇 개발
-농업, TIGER 농산물선물Enhanced(H), 137610.KS, 1000.00, 4392.30, 밀/옥수수/대두/설탕 등 대표 농산물 선물 지수 추종 ETF (S&P GSCI Agriculture Enhanced)
+농업, TIGER 농산물선물Enhanced(H), 137610.KS, 1000.00, 4831.53, 밀/옥수수/대두/설탕 등 대표 농산물 선물 지수 추종 ETF (S&P GSCI Agriculture Enhanced)
 농업, KODEX 3대농산물선물(H), 271060.KS, 6000.00, 12000.00, 옥수수/콩/밀 3대 곡물 선물 투자 ETF (S&P GSCI Grains Select)
 농업, 메리츠 레버리지 대표 농산물 선물 ETN(H), 610035.KS, 5000.00, 15000.00, 대표 농산물 선물 2배 레버리지 추종 ETN | ⚠ yfinance 미지원 가능성 (조회 실패 시 알림 미동작)
 
@@ -70,18 +70,18 @@ IT, Tencent Holdings, 0700.HK, 250, 700, 중국 최대 소셜 미디어(WeChat)/
 # === ETF ===
 ETF, SPDR S&P 500 ETF, SPY, 550, 800, 미국 대표 500대 기업에 투자하는 대표 지수 ETF (S&P 500 추종)
 ETF, Invesco QQQ (나스닥 100), QQQ, 480, 750, 나스닥 100 미래 기술주 중심 ETF | 포트폴리오 핵심 비중 권장 종목
-ETF, VanEck 반도체 ETF, SMH, 250, 585.64, 글로벌 반도체 대표 기업(엔비디아/TSMC/ASML 등) 투자 테마 ETF
+ETF, VanEck 반도체 ETF, SMH, 250, 644.20, 글로벌 반도체 대표 기업(엔비디아/TSMC/ASML 등) 투자 테마 ETF
 ETF, First Trust 클라우드 컴퓨팅 ETF, SKYY, 100, 180, 클라우드 컴퓨팅·SaaS 인프라 성장 산업 투자 테마 ETF
 ETF, Invesco AI & Next Gen Software ETF, IGPT, 45, 99.00, 인공지능(AI)·차세대 소프트웨어 성장 산업 투자 테마 ETF
 ETF, First Trust NASDAQ Clean Edge Smart Grid (전력), GRID, 130, 250, 전력망·스마트그리드·전력 인프라 성장 산업 투자 테마 ETF
 ETF, iShares Biotechnology ETF, IBB, 110, 198.00, 헬스케어·바이오테크 산업 전반에 투자하는 바이오 ETF
-ETF, Vanguard Growth ETF, VUG, 249.32, 600, 미국 대형 장기 성장주(Growth)에 폭넓게 투자하는 성장주 ETF
+ETF, Vanguard Growth ETF, VUG, 224.39, 600, 미국 대형 장기 성장주(Growth)에 폭넓게 투자하는 성장주 ETF
 
 # === 기타 ===
 기타, Hyundai Motor Company, 005380.KS, 190000, 822800.00, 글로벌 완성차 제조 및 친환경차(EV/FCEV)/미래 모빌리티 개발
 기타, Kia Corporation, 000270.KS, 90000, 165000.00, 글로벌 완성차 제조 및 전기차(EV)/목적기반차량(PBV)·미래 모빌리티
 기타, KakaoBank, 323410.KS, 18000.00, 29000, 모바일 완결형 뱅킹 및 혁신 금융 서비스를 제공하는 인터넷전문은행
 기타, The Walt Disney Company, DIS, 80, 150, 글로벌 종합 엔터테인먼트/미디어 그룹 및 테마파크/OTT(Disney+)
-기타, Netflix, NFLX, 524.88, 1500, 글로벌 1위 OTT 스트리밍 서비스 및 오리지널 콘텐츠 제작·배급
+기타, Netflix, NFLX, 472.39, 1500, 글로벌 1위 OTT 스트리밍 서비스 및 오리지널 콘텐츠 제작·배급
 기타, Bitcoin, BTC-USD, 30000, 120000, 최초이자 시가총액 1위의 탈중앙화 블록체인 기반 가상자산(암호화폐)
 기타, Vingroup, VIC.VN, 90000, 290000, 베트남 최대 민간 기업집단 (자동차/부동산/유통/IT 서비스 등)
