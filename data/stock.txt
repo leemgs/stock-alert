@@ -75,13 +75,13 @@ ETF, First Trust 클라우드 컴퓨팅 ETF, SKYY, 100, 180, 클라우드 컴퓨
 ETF, Invesco AI & Next Gen Software ETF, IGPT, 45, 99.00, 인공지능(AI)·차세대 소프트웨어 성장 산업 투자 테마 ETF
 ETF, First Trust NASDAQ Clean Edge Smart Grid (전력), GRID, 130, 250, 전력망·스마트그리드·전력 인프라 성장 산업 투자 테마 ETF
 ETF, iShares Biotechnology ETF, IBB, 110, 198.00, 헬스케어·바이오테크 산업 전반에 투자하는 바이오 ETF
-ETF, Vanguard Growth ETF, VUG, 201.95, 600, 미국 대형 장기 성장주(Growth)에 폭넓게 투자하는 성장주 ETF
+ETF, Vanguard Growth ETF, VUG, 181.75, 600, 미국 대형 장기 성장주(Growth)에 폭넓게 투자하는 성장주 ETF
 
 # === 기타 ===
 기타, Hyundai Motor Company, 005380.KS, 190000, 822800.00, 글로벌 완성차 제조 및 친환경차(EV/FCEV)/미래 모빌리티 개발
 기타, Kia Corporation, 000270.KS, 90000, 165000.00, 글로벌 완성차 제조 및 전기차(EV)/목적기반차량(PBV)·미래 모빌리티
 기타, KakaoBank, 323410.KS, 18000.00, 29000, 모바일 완결형 뱅킹 및 혁신 금융 서비스를 제공하는 인터넷전문은행
 기타, The Walt Disney Company, DIS, 80, 150, 글로벌 종합 엔터테인먼트/미디어 그룹 및 테마파크/OTT(Disney+)
-기타, Netflix, NFLX, 425.15, 1500, 글로벌 1위 OTT 스트리밍 서비스 및 오리지널 콘텐츠 제작·배급
+기타, Netflix, NFLX, 382.63, 1500, 글로벌 1위 OTT 스트리밍 서비스 및 오리지널 콘텐츠 제작·배급
 기타, Bitcoin, BTC-USD, 30000, 120000, 최초이자 시가총액 1위의 탈중앙화 블록체인 기반 가상자산(암호화폐)
 기타, Vingroup, VIC.VN, 90000, 290000, 베트남 최대 민간 기업집단 (자동차/부동산/유통/IT 서비스 등)
