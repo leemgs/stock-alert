@@ -14,6 +14,99 @@
 
 ---
 
+## 🔎 한눈에 보기 (At a Glance)
+
+별도 서버 없이 **GitHub Actions**만으로 동작하는 서버리스 주가 감시 파이프라인입니다.
+아래 한 장의 그림으로 전체 구조를 파악할 수 있습니다.
+
+```mermaid
+flowchart LR
+    subgraph SRC["🌐 데이터 소스"]
+        YF["Yahoo Finance<br/>(yfinance)"]
+        ST["종목 리스트<br/>(data/stock.txt)"]
+    end
+
+    subgraph PIPE["📈 stock-alert 파이프라인"]
+        direction LR
+        C["📥 수집<br/><b>fetch_price</b><br/>실시간 시세 조회"]
+        J["⚖️ 판정<br/><b>임계가 비교</b><br/>상/하한 돌파 + Rate-Limit"]
+        N["📢 알림<br/><b>Email · Slack</b><br/>HTML 카드 발송"]
+        U["🔄 갱신<br/><b>임계값 자동 조정</b><br/>±10% 후 commit/push"]
+        C --> J
+        J -->|돌파 발생| N
+        N --> U
+    end
+
+    YF --> C
+    ST --> C
+    U -.->|"stock.txt 반영"| ST
+
+    style C fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a
+    style J fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    style N fill:#dcfce7,stroke:#22c55e,color:#14532d
+    style U fill:#fae8ff,stroke:#a855f7,color:#581c87
+```
+
+| 단계 | 구성 요소 | 한 줄 설명 |
+| --- | --- | --- |
+| 📥 **수집** | `src/multi_stock_alert.py` · `yfinance` | `data/stock.txt`의 종목별 실시간 시세를 조회 |
+| ⚖️ **판정** | 임계가 비교 · Rate-Limit | 하한(`price_down`)/상한(`price_up`) 돌파 여부 판정 및 알림 횟수 제어 |
+| 📢 **알림** | `send_email` · `post_slack` | 돌파 시 HTML 이메일과 Slack 채널(#wins/#risk)로 즉시 발송 |
+| 🔄 **갱신** | `update_stock_file` · GitHub Actions | 상한 +10% / 하한 −10% 조정 후 `stock.txt`를 자동 commit·push |
+| 📆 **리포트** | `src/stock_weekly_report.py` | 매주 토요일 지난 7일 등락률을 요약해 주간 리포트 발송 |
+
+> **핵심 원칙:** *감지는 매시간 자동, 임계값 갱신은 알림 발생 시에만.* 별도 인프라 없이 GitHub Actions 러너에서 전 과정이 완결됩니다.
+
+---
+
+## 🔄 동작 흐름도 (Operation Flow)
+
+알림 1회 실행(매시간) 시 데이터가 흐르는 전체 순서입니다.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant CRON as ⏰ GitHub Actions<br/>(1시간 주기)
+    participant APP as 📈 multi_stock_alert.py
+    participant YF as 🌐 Yahoo Finance
+    participant RL as ⚖️ Rate-Limiter
+    participant OUT as 📢 Email / Slack
+    participant REPO as 🗂️ GitHub Repo
+
+    CRON->>APP: 워크플로 트리거
+    APP->>APP: stock.txt 종목·임계값 로드
+    loop 종목별 반복
+        APP->>YF: 실시간 시세 요청 (fetch_price)
+        YF-->>APP: 현재가 반환
+        APP->>APP: price_down / price_up 비교
+        alt 임계가 돌파 (상한↑ / 하한↓)
+            APP->>RL: 발송 가능 여부 확인
+            alt 허용 (일일 한도·최소 간격·글로벌 캡 통과)
+                RL-->>APP: OK
+                APP->>OUT: HTML 이메일 + Slack 알림 발송
+                APP->>APP: 임계값 ±10% 조정 (update_stock_file)
+            else 차단 (Rate-Limit 초과)
+                RL-->>APP: 스킵 (사유 기록)
+            end
+        else 임계가 이내
+            APP->>APP: 알림 없음 (통과)
+        end
+    end
+    APP->>REPO: 변경된 stock.txt 자동 commit & push
+    Note over CRON,REPO: 갱신된 임계값으로 다음 실행 시 단계별 추적 지속
+```
+
+**흐름 요약**
+
+1. **트리거**: GitHub Actions가 1시간마다(`0 */1 * * *`) 워크플로를 실행합니다.
+2. **로드**: `data/stock.txt`에서 종목·카테고리·임계값(`price_down`/`price_up`)을 읽어옵니다.
+3. **수집·판정**: 종목별로 `yfinance` 실시간 시세를 받아 상/하한 돌파 여부를 비교합니다.
+4. **Rate-Limit**: 종목당 일일 최대 횟수, 최소 발송 간격, 글로벌 캡을 확인해 과도한 알림을 억제합니다.
+5. **알림**: 돌파가 허용되면 HTML 이메일과 Slack(#wins/#risk) 채널로 발송합니다.
+6. **자동 갱신**: 돌파한 임계값을 ±10% 조정하고, 변경된 `stock.txt`를 저장소에 자동 commit·push합니다.
+
+---
+
 ## 1. 🚀 주요 기능
 
 | 기능                     | 설명                                                   |
