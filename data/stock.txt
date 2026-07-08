@@ -2,7 +2,7 @@
 AI, Alphabet Inc. Class C, GOOG, 260.00, 420.00, 구글 검색/안드로이드/유튜브 및 AI 연구(DeepMind)
 AI, Meta Platforms, META, 250.00, 900.00, 페이스북/인스타그램 및 메타버스/인공지능(LLM Llama) 연구 개발
 AI, NVIDIA Corporation, NVDA, 150.00, 600.00, 로봇 AI 두뇌 | Isaac | GPU 설계/가속 컴퓨팅/AI 칩 및 물리 엔진
-AI, Satoshi Holdings (deepmind), 223310.KQ, 3389.04, 4500.00, 인공지능(AI) 및 딥러닝 기반 소프트웨어 기술 투자/개발
+AI, Satoshi Holdings (deepmind), 223310.KQ, 3389.04, 4950.00, 인공지능(AI) 및 딥러닝 기반 소프트웨어 기술 투자/개발
 AI, Microsoft, MSFT, 300.00, 600.00, OS(Windows)/클라우드(Azure)/오피스 소프트웨어 및 생성형 AI(Copilot)
 AI, SpaceX, SPCX, 135.00, 300, 민간 우주개발 및 재사용 우주선(Falcon/Starship)/우주인터넷(Starlink)
 
