@@ -30,7 +30,8 @@ STOCKS_PATH = BASE / "stock.txt"
 STATE_PATH  = BASE / "state.json"
 HISTORY_PATH= BASE / "history.json"
 LOG_PREFIX  = "[STOCK-ALERT] "
-GITHUB_URL = "https://github.com/leemgs/stock-alert"   
+GITHUB_URL = "https://github.com/leemgs/stock-alert"
+HOMEPAGE_URL = "https://leemgs.github.io/stock-alert/"
 
 
 # ---------- Helpers: env / CI detection ----------
@@ -397,8 +398,10 @@ def generate_html_body(cfg, ts_str, down_breaches, up_breaches, errors, rate_lim
                 {error_html}
             </div>
             <div class="footer">
-                발송원: <a href="{GITHUB_URL}">Stock Alert Bot (GitHub)</a><br>
-                본 메일은 설정된 임계치 도달 시 자동으로 발송됩니다.
+                📊 <a href="{HOMEPAGE_URL}">대시보드 홈페이지 바로가기</a>
+                &nbsp;·&nbsp;
+                💻 <a href="{GITHUB_URL}">GitHub 저장소</a><br>
+                발송원: Stock Alert Bot · 본 메일은 설정된 임계치 도달 시 자동으로 발송됩니다.
             </div>
         </div>
     </body>

@@ -293,6 +293,9 @@ def main():
             {html_tables}
             
             <div class="footer">
+                📊 <a href="https://leemgs.github.io/stock-alert/">대시보드 홈페이지 바로가기</a>
+                &nbsp;·&nbsp;
+                💻 <a href="https://github.com/leemgs/stock-alert">GitHub 저장소</a><br>
                 Stock Alert &copy; Automated Weekly Report
             </div>
         </div>
