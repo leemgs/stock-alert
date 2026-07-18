@@ -3,7 +3,12 @@ name: Daily Stock Report (1-hour)
 on:
   schedule:
     - cron: "0 */1 * * *"   # every 1 hour (UTC)
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      test_email:
+        description: "테스트 이메일 발송 (임계치 무관, 샘플 알림 1회)"
+        type: boolean
+        default: false
 
 jobs:
   run-alerts:
@@ -46,6 +51,8 @@ jobs:
         env:
           SMTP_PASS: ${{ secrets.SMTP_PASS || vars.SMTP_PASS }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+          # workflow_dispatch 에서 test_email 체크 시 샘플 테스트 메일 1회 발송 (스케줄 실행 시엔 빈 값)
+          STOCK_ALERT_TEST: ${{ github.event.inputs.test_email }}
         run: |
           python src/multi_stock_alert.py
 

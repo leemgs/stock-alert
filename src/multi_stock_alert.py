@@ -409,7 +409,38 @@ def generate_html_body(cfg, ts_str, down_breaches, up_breaches, errors, rate_lim
     """
     return html
 
-def slack_blocks_header(ts_str): 
+def _test_mode_enabled() -> bool:
+    """--test 인자 또는 STOCK_ALERT_TEST 환경변수(true/1/yes)로 테스트 모드 활성화."""
+    if "--test" in sys.argv:
+        return True
+    return os.getenv("STOCK_ALERT_TEST", "").strip().lower() in {"1", "true", "yes", "y", "on"}
+
+def send_test_email(cfg, ts_str):
+    """임계치 돌파 여부와 무관하게 샘플 알림 메일을 1회 강제 발송(설정 점검용)."""
+    missing = [k for k in ("SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "EMAIL_TO") if not cfg.get(k)]
+    if missing:
+        print(LOG_PREFIX + f"[TEST] 발송 불가 — 누락된 설정: {', '.join(missing)} "
+              f"(SMTP_PASS 는 GitHub Actions 시크릿/환경변수로 주입되어야 합니다)", file=sys.stderr)
+        sys.exit(1)
+
+    # 예시(샘플) 데이터 — (loc, name, ticker, price, threshold, new_threshold, desc)
+    down_breaches = [
+        ("AI", "샘플 종목 (하한 테스트)", "SAMPLE.DN", 95.0, 100.0, 90.0,
+         "이 항목은 테스트 메일용 예시 데이터입니다."),
+    ]
+    up_breaches = [
+        ("IT", "샘플 종목 (상한 테스트)", "SAMPLE.UP", 210.0, 200.0, 220.0,
+         "이 항목은 테스트 메일용 예시 데이터입니다."),
+    ]
+    notes = ["✅ 이 메일은 이메일 설정 점검용 테스트 발송입니다. 실제 임계치 돌파가 아닙니다."]
+
+    body = generate_html_body(cfg, ts_str, down_breaches, up_breaches, [], notes)
+    to = cfg["EMAIL_TO"]
+    print(LOG_PREFIX + f"[TEST] 테스트 메일 발송 시도 → {to}")
+    send_email(cfg, "[Stock Alert] ✅ 테스트 메일 (이메일 설정 점검용)", body, subtype="html")
+    print(LOG_PREFIX + "[TEST] 테스트 메일 발송 완료")
+
+def slack_blocks_header(ts_str):
     return [
         {"type":"header","text":{"type":"plain_text","text":"📈 Stock Alert","emoji":True}},
         {"type":"context","elements":[{"type":"mrkdwn","text":f"*시각:* {ts_str}"}]}
@@ -473,9 +504,15 @@ def main():
     cfg = load_config(CONFIG_PATH)
     info_type = cfg.get("INFO_TYPE", "info").lower()
 
+    ts = now_tz(cfg["TZ"]); today=ts.strftime("%Y-%m-%d"); ts_str=ts.strftime("%Y-%m-%d %H:%M:%S %Z")
+
+    # 테스트 모드: 시세 조회/상태 변경 없이 샘플 알림 메일만 1회 발송 후 종료
+    if _test_mode_enabled():
+        send_test_email(cfg, ts_str)
+        return
+
     stocks=load_stocks(STOCKS_PATH)
     state =load_state()
-    ts = now_tz(cfg["TZ"]); today=ts.strftime("%Y-%m-%d"); ts_str=ts.strftime("%Y-%m-%d %H:%M:%S %Z")
 
     rl_reset_if_new_day(state, today)
 
