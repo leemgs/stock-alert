@@ -2,3 +2,7 @@
 
 data/history.json
 data/state.json
+
+# Python
+__pycache__/
+*.py[cod]
