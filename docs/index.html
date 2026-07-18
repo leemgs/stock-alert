@@ -732,8 +732,15 @@ function initEvents(){
     $$("#periodSeg button").forEach(x=>x.classList.remove("active")); b.classList.add("active");
     state.period=b.dataset.p; renderGrid();
   });
-  $("#search").value=""; state.q="";
-  $("#search").oninput=e=>{ state.q=e.target.value.trim(); renderGrid(); };
+  const searchEl=$("#search");
+  const clearSearch=()=>{ searchEl.value=""; if(state.q){ state.q=""; renderGrid(); } };
+  searchEl.oninput=()=>{
+    if(document.activeElement!==searchEl){ clearSearch(); return; } // 포커스 없이 발생한 input = 브라우저 자동 복원
+    state.q=searchEl.value.trim(); renderGrid();
+  };
+  clearSearch();
+  addEventListener("pageshow",clearSearch);
+  setTimeout(clearSearch,400);
   $("#sortSel").onchange=e=>{ state.sort=e.target.value; renderGrid(); };
   $("#detailBg").onclick=e=>{ if(e.target===$("#detailBg")) closeDetail(); };
   $("#formBg").onclick=e=>{ if(e.target===$("#formBg")) $("#formBg").classList.remove("open"); };
