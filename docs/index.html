@@ -196,7 +196,7 @@
       </div>
     </div>
     <div class="controls">
-      <input class="search" id="search" type="search" placeholder="종목명 · 티커 검색…">
+      <input class="search" id="search" type="search" placeholder="종목명 · 티커 검색…" autocomplete="off">
       <select id="sortSel" style="width:auto">
         <option value="domain">정렬: 도메인순</option>
         <option value="change_desc">등락률 높은순</option>
@@ -732,6 +732,7 @@ function initEvents(){
     $$("#periodSeg button").forEach(x=>x.classList.remove("active")); b.classList.add("active");
     state.period=b.dataset.p; renderGrid();
   });
+  $("#search").value=""; state.q="";
   $("#search").oninput=e=>{ state.q=e.target.value.trim(); renderGrid(); };
   $("#sortSel").onchange=e=>{ state.sort=e.target.value; renderGrid(); };
   $("#detailBg").onclick=e=>{ if(e.target===$("#detailBg")) closeDetail(); };
