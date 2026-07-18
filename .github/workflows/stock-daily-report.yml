@@ -49,24 +49,17 @@ jobs:
         run: |
           python src/multi_stock_alert.py
 
-      # 대시보드(docs/)용 시세/이력 데이터 갱신 — 실패해도 알림 파이프라인은 유지
-      - name: Generate dashboard data
-        if: always()
-        continue-on-error: true
-        run: |
-          python src/generate_dashboard_data.py
-
-      - name: Sync stock.txt & dashboard data back and commit
+      - name: Sync stock.txt back and commit
         if: always()
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add data/stock.txt docs/data/history.json
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "[Stock Alert] Update thresholds & dashboard data"
+          if ! git diff --quiet data/stock.txt; then
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git add data/stock.txt
+            git commit -m "[Stock Alert] Update thresholds (+/- 10%)"
             git push
+          else
+            echo "No changes in stock.txt"
           fi
 
       - name: Save history.json cache
