@@ -70,6 +70,18 @@
   .tile .v{font-size:24px; font-weight:700; letter-spacing:-.02em}
   .tile .v small{font-size:13px; font-weight:600; color:var(--text-secondary)}
 
+  /* ---- market regime banner ---- */
+  .regimebar{border:1px solid var(--border); border-radius:var(--radius); padding:12px 15px; margin-bottom:18px; box-shadow:var(--shadow)}
+  .regimebar.ok{background:color-mix(in srgb,var(--good) 8%,var(--surface-1)); border-color:color-mix(in srgb,var(--good) 30%,var(--border))}
+  .regimebar.warn{background:color-mix(in srgb,var(--up) 8%,var(--surface-1)); border-color:color-mix(in srgb,var(--up) 35%,var(--border))}
+  .regimebar .rhead{font-size:13px; color:var(--text-primary); margin-bottom:9px; display:flex; gap:8px; flex-wrap:wrap; align-items:baseline}
+  .regimebar .rnote{color:var(--muted); font-size:11px; font-weight:600}
+  .regimebar .rchips{display:flex; gap:8px; flex-wrap:wrap}
+  .rchip{font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:999px; border:1px solid var(--border); font-variant-numeric:tabular-nums}
+  .rchip em{font-style:normal; font-weight:600; opacity:.85; margin-left:2px}
+  .rchip.bull{background:color-mix(in srgb,var(--good) 14%,transparent); color:var(--good); border-color:color-mix(in srgb,var(--good) 34%,transparent)}
+  .rchip.bear{background:color-mix(in srgb,var(--up) 15%,transparent); color:var(--up); border-color:color-mix(in srgb,var(--up) 38%,transparent)}
+
   /* ---- controls ---- */
   .controls{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px}
   .chips{display:flex; gap:6px; flex-wrap:wrap}
@@ -118,9 +130,10 @@
   .w52 .mark{position:absolute; top:-3px; width:2px; height:12px; background:var(--text-primary); border-radius:2px; box-shadow:0 0 0 2px var(--surface-1)}
   .w52 .ends{display:flex; justify-content:space-between; font-size:10.5px; color:var(--text-secondary); margin-top:4px; font-variant-numeric:tabular-nums}
   .w52 .ends b{color:var(--muted); font-weight:700; margin-right:2px}
-  .badge{font-size:10px; font-weight:800; padding:2px 6px; border-radius:5px; letter-spacing:.02em}
+  .badge{font-size:10px; font-weight:800; padding:2px 6px; border-radius:5px; letter-spacing:.02em; white-space:nowrap; display:inline-block}
   .badge.buy{background:color-mix(in srgb,var(--down) 18%,transparent); color:var(--down)}
   .badge.sell{background:color-mix(in srgb,var(--up) 18%,transparent); color:var(--up)}
+  .badge.pause{background:color-mix(in srgb,var(--neutral) 22%,transparent); color:var(--text-secondary)}
   .nodata{font-size:11px; color:var(--muted); font-style:italic; margin-top:8px}
   .empty{text-align:center; color:var(--muted); padding:60px 20px}
 
@@ -142,6 +155,17 @@
   .info .k{color:var(--muted); font-size:11px; margin-bottom:3px}
   .info .v{font-size:14px; font-weight:600; font-variant-numeric:tabular-nums}
   .desc{margin-top:14px; color:var(--text-secondary); font-size:13px; line-height:1.6; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+
+  /* ---- auto-trade signal ---- */
+  .autotrade{margin-top:14px; border:1px solid var(--border); border-left-width:4px; border-radius:10px; padding:11px 14px; background:var(--surface-2)}
+  .autotrade.buy{border-left-color:var(--down); background:color-mix(in srgb,var(--down) 7%,var(--surface-2))}
+  .autotrade.sell{border-left-color:var(--up); background:color-mix(in srgb,var(--up) 7%,var(--surface-2))}
+  .autotrade.pause{border-left-color:var(--neutral); background:color-mix(in srgb,var(--neutral) 9%,var(--surface-2))}
+  .autotrade.hold{border-left-color:var(--baseline)}
+  .autotrade .at-h{font-size:12.5px; font-weight:700; color:var(--text-secondary); display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:5px}
+  .autotrade .at-tag{font-size:11px; font-weight:700; color:var(--muted); background:var(--surface-1); border:1px solid var(--border); border-radius:999px; padding:2px 9px}
+  .autotrade .at-body{font-size:13.5px; color:var(--text-primary); line-height:1.5}
+  .autotrade .at-note{font-size:11px; color:var(--muted); margin-top:5px}
 
   /* ---- news ---- */
   .news{margin-top:14px; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
@@ -209,6 +233,7 @@
   <!-- ============ DASHBOARD ============ -->
   <section id="tab-dash">
     <div class="tiles" id="tiles"></div>
+    <div id="regimeBar" class="regimebar hidden"></div>
 
     <div class="controls">
       <div class="chips" id="domainChips"></div>
@@ -290,6 +315,7 @@ const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
 const CUR = {USD:"$",KRW:"₩",JPY:"¥",HKD:"HK$",VND:"₫",EUR:"€",GBP:"£",CNY:"¥"};
 const KR_UNIT = new Set(["KRW","JPY","VND"]);
 const PERIOD_LABEL = {W:"주별",M:"월별",Q:"분기별",H:"반기별",Y1:"1년",Y3:"3년",Y5:"5년"};
+const MARKET_NAME = {US:"미국 S&P500", KR:"한국 KOSPI", JP:"일본 Nikkei225", HK:"홍콩 HSI", VN:"베트남"};
 const PERIOD_ORDER = ["W","M","Q","H"];      // 집계 단위
 const YEAR_ORDER   = ["Y1","Y3","Y5"];       // 연도(기간) 범위
 const YEAR_SPAN    = {Y1:1, Y3:3, Y5:5};
@@ -488,12 +514,22 @@ function rebuildEntries(){
       if(down!=null && current<=down) alert="buy";
       else if(up!=null && current>=up) alert="sell";
     }
+    // 시장 국면(하락장 여부) + 자동매매 신호 산출
+    const market=pd?pd.market:null;
+    const regime=(DATA.markets && market && DATA.markets[market]) ? DATA.markets[market].regime : null;
+    let autoTrade=null;
+    if(alert==="buy"){
+      // 하락장이면 자동 '매수'를 보류(시도하지 않음)
+      autoTrade = (regime==="bear") ? {action:"buy",status:"paused"} : {action:"buy",status:"ready"};
+    } else if(alert==="sell"){
+      autoTrade = {action:"sell",status:"ready"};
+    }
     return {...e, down, up, currency:cur, current,
       change_pct: pd?pd.change_pct:null, prev_close: pd?pd.prev_close:null,
       week52_high: pd?pd.week52_high:null, week52_low: pd?pd.week52_low:null,
       sector: pd?pd.sector:null, industry: pd?pd.industry:null,
       market_cap: pd?pd.market_cap:null, website: pd?pd.website:null,
-      news: pd?pd.news:null,
+      news: pd?pd.news:null, market, marketRegime:regime, autoTrade,
       series: pd?pd.series:null, hasData:!!pd, alert};
   });
 }
@@ -513,6 +549,22 @@ function renderTiles(){
     {k:"데이터 종목", v:withData.length, s:DATA.errors.length?`수집실패 ${DATA.errors.length}`:"전량 수집됨"},
   ];
   $("#tiles").innerHTML=tiles.map(t=>`<div class="tile"><div class="k">${t.k}</div><div class="v">${t.v}</div><div class="sub" style="color:var(--muted);margin-top:3px;font-size:11.5px">${t.s}</div></div>`).join("");
+}
+function renderRegimeBar(){
+  const el=$("#regimeBar"); const markets=(DATA&&DATA.markets)||{};
+  const keys=Object.keys(markets);
+  if(!keys.length){ el.classList.add("hidden"); el.innerHTML=""; return; }
+  const bear=keys.filter(k=>markets[k].regime==="bear");
+  const chips=keys.map(k=>{
+    const m=markets[k], b=m.regime==="bear";
+    const p=(m.pct_vs_sma200>=0?"+":"")+m.pct_vs_sma200+"%";
+    return `<span class="rchip ${b?'bear':'bull'}" title="200일 이동평균 대비 ${p}">${esc(MARKET_NAME[k]||k)}: ${b?"하락장 ▼":"상승장 ▲"} <em>${p}</em></span>`;
+  }).join("");
+  const head = bear.length
+    ? `<b>⏸ 하락장 감지</b> — 해당 시장 종목은 <b>자동 매수 신호를 보류</b>합니다 (매도 신호는 유지).`
+    : `<b>✅ 전 시장 상승장</b> — 자동매매 신호 정상 동작.`;
+  el.className="regimebar "+(bear.length?"warn":"ok");
+  el.innerHTML=`<div class="rhead">${head} <span class="rnote">지수 200일선 기준 · 신호 표시(실주문 없음)</span></div><div class="rchips">${chips}</div>`;
 }
 function renderChips(){
   const doms=["ALL",...domainList()];
@@ -565,7 +617,12 @@ function renderGrid(){
   const arr=filteredEntries();
   const grid=$("#grid"); $("#dashEmpty").classList.toggle("hidden",arr.length>0);
   grid.innerHTML=arr.map((e,idx)=>{
-    const badge=e.alert==="buy"?`<span class="badge buy">하락알림</span>`:e.alert==="sell"?`<span class="badge sell">상승알림</span>`:"";
+    let badge="";
+    if(e.autoTrade){
+      if(e.autoTrade.status==="paused") badge=`<span class="badge pause" title="하락장이라 자동 매수 보류">⏸ 매수보류</span>`;
+      else if(e.autoTrade.action==="buy") badge=`<span class="badge buy" title="매수 신호(자동매매)">🟢 매수신호</span>`;
+      else if(e.autoTrade.action==="sell") badge=`<span class="badge sell" title="매도 신호(자동매매)">🔴 매도신호</span>`;
+    }
     return `<div class="card" data-i="${idx}">
       <div class="row1">
         <div><div class="name">${esc(e.name)} ${badge}</div><div class="tkr">${esc(e.ticker)}</div></div>
@@ -587,6 +644,29 @@ function renderGrid(){
   });
 }
 function esc(s){ return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+/* ---------- auto-trade signal ---------- */
+function autoTradeHTML(e){
+  const mkName=MARKET_NAME[e.market]||e.market||"시장";
+  const regimeTxt = e.marketRegime==="bear" ? `${mkName} · 하락장 ▼`
+                  : e.marketRegime==="bull" ? `${mkName} · 상승장 ▲`
+                  : `${mkName} · 판정 없음`;
+  let cls, line;
+  if(!e.autoTrade){
+    cls="hold"; line="관망 — 매수/매도 목표가에 도달하지 않았습니다.";
+  } else if(e.autoTrade.status==="paused"){
+    cls="pause"; line="⏸ 매수 목표가 도달했지만 <b>하락장이라 자동 매수를 보류</b>합니다.";
+  } else if(e.autoTrade.action==="buy"){
+    cls="buy"; line="🟢 <b>매수 신호</b> — 현재가가 매수 목표가 이하입니다.";
+  } else {
+    cls="sell"; line="🔴 <b>매도 신호</b> — 현재가가 매도 목표가 이상입니다.";
+  }
+  return `<div class="autotrade ${cls}">
+    <div class="at-h">🤖 자동매매 신호 <span class="at-tag">${esc(regimeTxt)}</span></div>
+    <div class="at-body">${line}</div>
+    <div class="at-note">지수 200일선 기준 · 신호 표시용이며 실제 주문은 실행하지 않습니다.</div>
+  </div>`;
+}
 
 /* ---------- news ---------- */
 function newsHTML(e){
@@ -637,6 +717,7 @@ function openDetail(e){
       <div style="font-size:26px;font-weight:700;letter-spacing:-.02em">${fmtPrice(e.current,e.currency)}</div>
       ${deltaHTML(e.change_pct)}
     </div>
+    ${autoTradeHTML(e)}
     ${e.hasData?`
       <div class="seg" id="dPeriod" style="margin-top:14px">${periodSegHTML(state.period)}</div>
       <div class="chartwrap"><canvas class="big" id="bigCanvas"></canvas><div class="tooltip" id="bigTip"></div></div>
@@ -793,7 +874,7 @@ async function ghCommit(){
 }
 
 /* ---------- glue ---------- */
-function refreshAll(){ rebuildEntries(); renderTiles(); renderChips(); renderGrid(); renderEditor(); }
+function refreshAll(){ rebuildEntries(); renderTiles(); renderRegimeBar(); renderChips(); renderGrid(); renderEditor(); }
 
 function switchTab(name){
   $$(".tab").forEach(t=>t.classList.toggle("active",t.dataset.tab===name));

@@ -16,9 +16,12 @@ Dashboard Data Generator
   "generated_at": "2026-07-18T09:00:00+09:00",
   "period": "5y", "interval": "1wk",
   "domains": ["AI", "SW", ...],
+  "markets": {                       # 시장별 하락장 판정(자동매매 매수 보류용)
+    "US": {"index","last","sma200","pct_vs_sma200","regime"}, ...
+  },
   "tickers": {
     "<ticker>": {
-      "name", "domain", "ticker", "currency", "desc",
+      "name", "domain", "ticker", "market", "currency", "desc",
       "down", "up",
       "current", "prev_close", "change_pct",
       "week52_high", "week52_low", "sector", "industry",
@@ -48,6 +51,53 @@ OUT_PATH = OUT_DIR / "history.json"
 PERIOD = os.getenv("DASHBOARD_PERIOD", "5y")
 INTERVAL = os.getenv("DASHBOARD_INTERVAL", "1wk")
 TZ = os.getenv("TZ", "Asia/Seoul")
+
+# 시장(국가)별 대표 지수 — 하락장(bear) 판정용.
+# 지수가 200일 이동평균 아래면 '하락장'으로 간주하고, 대시보드의
+# 자동매매(신호)에서 해당 시장 종목의 '매수' 시도를 보류한다.
+MARKET_INDEX = {
+    "US": "^GSPC",   # S&P 500
+    "KR": "^KS11",   # KOSPI
+    "JP": "^N225",   # Nikkei 225
+    "HK": "^HSI",    # Hang Seng
+    # VN 등 신뢰할 지수가 없는 시장은 판정하지 않음(=필터 미적용, 안전 측)
+}
+
+
+def market_of(ticker):
+    """티커 접미사로 상장 시장(국가) 추정."""
+    t = (ticker or "").upper()
+    if t.endswith(".KS") or t.endswith(".KQ"):
+        return "KR"
+    if t.endswith(".T"):
+        return "JP"
+    if t.endswith(".HK"):
+        return "HK"
+    if t.endswith(".VN") or t.endswith(".HM") or t.endswith(".HN"):
+        return "VN"
+    return "US"
+
+
+def detect_market_regime(index_ticker):
+    """대표 지수의 종가가 200일 이동평균 아래이면 'bear', 아니면 'bull'."""
+    try:
+        hist = yf.Ticker(index_ticker).history(period="1y", interval="1d")
+        if hist is None or hist.empty or "Close" not in hist:
+            return None
+        closes = [c for c in hist["Close"].tolist() if _clean(c) is not None]
+        if len(closes) < 200:
+            return None
+        sma200 = sum(closes[-200:]) / 200.0
+        last = float(closes[-1])
+        return {
+            "index": index_ticker,
+            "last": round(last, 2),
+            "sma200": round(sma200, 2),
+            "pct_vs_sma200": round((last - sma200) / sma200 * 100.0, 2),
+            "regime": "bear" if last < sma200 else "bull",
+        }
+    except Exception:
+        return None
 
 
 def parse_float_or_none(s):
@@ -219,6 +269,7 @@ def fetch_ticker(stock):
         "name": stock["name"],
         "domain": stock["loc"],
         "ticker": tkr,
+        "market": market_of(tkr),
         "desc": stock["desc"],
         "down": stock["down"],
         "up": stock["up"],
@@ -258,6 +309,24 @@ def main():
             errors.append(msg)
             print(f"  ✗ {msg}", file=sys.stderr)
 
+    # --- 시장(국가)별 하락장 판정 (자동매매 매수 보류 필터용) ---
+    markets_present = []
+    for t in tickers.values():
+        mk = t.get("market")
+        if mk and mk not in markets_present:
+            markets_present.append(mk)
+    markets = {}
+    for mk in markets_present:
+        idx = MARKET_INDEX.get(mk)
+        if not idx:
+            continue
+        r = detect_market_regime(idx)
+        if r:
+            markets[mk] = r
+            print(f"[market] {mk} ({idx}): {r['regime']} "
+                  f"(last {r['last']} vs SMA200 {r['sma200']}, "
+                  f"{r['pct_vs_sma200']:+.2f}%)")
+
     now = datetime.datetime.now(pytz.timezone(TZ))
     out = {
         "generated_at": now.isoformat(),
@@ -265,6 +334,7 @@ def main():
         "interval": INTERVAL,
         "domains": domains,
         "count": len(tickers),
+        "markets": markets,
         "tickers": tickers,
         "errors": errors,
     }
