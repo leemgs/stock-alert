@@ -104,6 +104,16 @@
   .rangebar .track{position:relative; height:6px; border-radius:4px; background:linear-gradient(90deg,color-mix(in srgb,var(--down) 55%,transparent),var(--grid) 45%,var(--grid) 55%,color-mix(in srgb,var(--up) 55%,transparent))}
   .rangebar .mark{position:absolute; top:-3px; width:2px; height:12px; background:var(--text-primary); border-radius:2px}
   .rangebar .lbls{display:flex; justify-content:space-between; font-size:10.5px; color:var(--muted); margin-top:4px; font-variant-numeric:tabular-nums}
+
+  /* ---- 52-week high/low range ---- */
+  .w52{margin-top:9px; padding-top:9px; border-top:1px dashed var(--border)}
+  .w52 .cap{display:flex; justify-content:space-between; align-items:baseline; font-size:10.5px; color:var(--muted); margin-bottom:5px; font-variant-numeric:tabular-nums}
+  .w52 .cap b{color:var(--text-secondary); font-weight:700}
+  .w52 .cap .hl{color:var(--text-primary); font-weight:700}
+  .w52 .track{position:relative; height:6px; border-radius:4px; background:linear-gradient(90deg,color-mix(in srgb,var(--down) 42%,transparent),color-mix(in srgb,var(--up) 42%,transparent))}
+  .w52 .mark{position:absolute; top:-3px; width:2px; height:12px; background:var(--text-primary); border-radius:2px; box-shadow:0 0 0 2px var(--surface-1)}
+  .w52 .ends{display:flex; justify-content:space-between; font-size:10.5px; color:var(--text-secondary); margin-top:4px; font-variant-numeric:tabular-nums}
+  .w52 .ends b{color:var(--muted); font-weight:700; margin-right:2px}
   .badge{font-size:10px; font-weight:800; padding:2px 6px; border-radius:5px; letter-spacing:.02em}
   .badge.buy{background:color-mix(in srgb,var(--down) 18%,transparent); color:var(--down)}
   .badge.sell{background:color-mix(in srgb,var(--up) 18%,transparent); color:var(--up)}
@@ -502,6 +512,22 @@ function rangeBarHTML(e){
   return `<div class="rangebar"><div class="track"><div class="mark" style="left:${(pos*100).toFixed(1)}%"></div></div>
     <div class="lbls"><span>${fmtPrice(e.down,e.currency)}</span><span>${fmtPrice(e.up,e.currency)}</span></div></div>`;
 }
+function w52HTML(e){
+  const lo=e.week52_low, hi=e.week52_high;
+  if(lo==null||hi==null||hi<=lo) return "";
+  let posHTML="", relHTML="";
+  if(e.current!=null){
+    let pos=(e.current-lo)/(hi-lo); pos=Math.max(0,Math.min(1,pos));
+    posHTML=`<div class="mark" style="left:${(pos*100).toFixed(1)}%" title="현재가 ${fmtPrice(e.current,e.currency)}"></div>`;
+    const fromHigh=(e.current-hi)/hi*100;   // 고점 대비 (음수=고점 아래)
+    relHTML=`<span class="hl">고점比 ${fromHigh>=0?"+":""}${fromHigh.toFixed(1)}%</span>`;
+  }
+  return `<div class="w52" title="최근 52주 최저·최고 대비 현재가 위치">
+    <div class="cap"><span>52주 범위</span>${relHTML}</div>
+    <div class="track">${posHTML}</div>
+    <div class="ends"><span><b>저</b> ${fmtPrice(lo,e.currency)}</span><span><b>고</b> ${fmtPrice(hi,e.currency)}</span></div>
+  </div>`;
+}
 function renderGrid(){
   const arr=filteredEntries();
   const grid=$("#grid"); $("#dashEmpty").classList.toggle("hidden",arr.length>0);
@@ -516,6 +542,7 @@ function renderGrid(){
       <div>${deltaHTML(e.change_pct)} <span class="sub" style="color:var(--muted);font-size:11px">${e.currency||""}</span></div>
       ${e.hasData?`<canvas class="spark"></canvas>`:`<div class="nodata">아직 시세 데이터 없음 (다음 수집 후 반영)</div>`}
       ${rangeBarHTML(e)}
+      ${w52HTML(e)}
     </div>`;
   }).join("");
   const cards=$$("#grid .card");
