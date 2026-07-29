@@ -85,6 +85,8 @@
   .seg button{background:none; border:none; color:var(--muted); padding:8px 12px; font-size:12.5px; font-weight:600; border-right:1px solid var(--border)}
   .seg button:last-child{border-right:none}
   .seg button.active{background:var(--series-1); color:#fff}
+  .seg .seg-lbl{display:inline-flex; align-items:center; padding:8px 9px; font-size:11px; font-weight:700; color:var(--muted);
+    background:var(--surface-2); border-right:1px solid var(--border); white-space:nowrap; cursor:default; user-select:none}
   label.fld{display:block; font-size:12px; color:var(--muted); margin:0 0 5px}
 
   /* ---- card grid ---- */
@@ -197,13 +199,7 @@
     <div class="controls">
       <div class="chips" id="domainChips"></div>
       <div class="spacer"></div>
-      <div class="seg" id="periodSeg" title="추이 기간">
-        <button data-p="W" class="active">주별</button>
-        <button data-p="M">월별</button>
-        <button data-p="Q">분기</button>
-        <button data-p="H">반기</button>
-        <button data-p="Y">연도</button>
-      </div>
+      <div class="seg" id="periodSeg" title="추이 기간 · 집계 단위와 연도 범위(1·3·5년)"></div>
     </div>
     <div class="controls">
       <input class="search" id="search" type="search" placeholder="종목명 · 티커 검색…" autocomplete="off">
@@ -279,7 +275,17 @@ const $ = (s,r=document)=>r.querySelector(s);
 const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
 const CUR = {USD:"$",KRW:"₩",JPY:"¥",HKD:"HK$",VND:"₫",EUR:"€",GBP:"£",CNY:"¥"};
 const KR_UNIT = new Set(["KRW","JPY","VND"]);
-const PERIOD_LABEL = {W:"주별",M:"월별",Q:"분기별",H:"반기별",Y:"연도별"};
+const PERIOD_LABEL = {W:"주별",M:"월별",Q:"분기별",H:"반기별",Y1:"1년",Y3:"3년",Y5:"5년"};
+const PERIOD_ORDER = ["W","M","Q","H"];      // 집계 단위
+const YEAR_ORDER   = ["Y1","Y3","Y5"];       // 연도(기간) 범위
+const YEAR_SPAN    = {Y1:1, Y3:3, Y5:5};
+/* 추이 기간 세그먼트(집계 단위 + 연도 범위) HTML 생성 — 대시보드/상세 공용 */
+function periodSegHTML(active){
+  const btn = p => `<button data-p="${p}" class="${p===active?"active":""}">${PERIOD_LABEL[p]}</button>`;
+  return PERIOD_ORDER.map(btn).join("")
+       + `<span class="seg-lbl">연도</span>`
+       + YEAR_ORDER.map(btn).join("");
+}
 const LS_STOCKS="stockalert.stocks", LS_THEME="stockalert.theme", LS_GH="stockalert.gh";
 
 let DATA=null;          // parsed history.json
@@ -321,9 +327,21 @@ function periodKey(t,p){
   if(p==="H") return Y+"-H"+(m<=6?1:2);
   return Y;
 }
+function sliceYears(series,n){
+  // 마지막 데이터 시점 기준 최근 n년 구간만 반환(원본 주봉 해상도 유지)
+  if(!series||!series.length) return [];
+  const last=series[series.length-1][0];
+  const d=new Date(last+"T00:00:00Z");
+  if(isNaN(d)) return series.slice();
+  d.setUTCFullYear(d.getUTCFullYear()-n);
+  const cutoff=d.toISOString().slice(0,10);
+  const out=series.filter(([t])=>t>=cutoff);
+  return out.length?out:series.slice(-1);
+}
 function resample(series,p){
   if(!series||!series.length) return [];
   if(p==="W") return series.map(([t,y])=>({t,y}));
+  if(p in YEAR_SPAN) return sliceYears(series,YEAR_SPAN[p]).map(([t,y])=>({t,y}));
   const map=new Map();
   for(const [t,y] of series) map.set(periodKey(t,p),{t,y});
   return [...map.values()];
@@ -584,9 +602,7 @@ function openDetail(e){
       ${deltaHTML(e.change_pct)}
     </div>
     ${e.hasData?`
-      <div class="seg" id="dPeriod" style="margin-top:14px">
-        ${Object.keys(PERIOD_LABEL).map(p=>`<button data-p="${p}" class="${p===state.period?"active":""}">${PERIOD_LABEL[p]}</button>`).join("")}
-      </div>
+      <div class="seg" id="dPeriod" style="margin-top:14px">${periodSegHTML(state.period)}</div>
       <div class="chartwrap"><canvas class="big" id="bigCanvas"></canvas><div class="tooltip" id="bigTip"></div></div>
       <div class="legend">
         <span><i style="background:var(--series-1)"></i>주가</span>
@@ -755,6 +771,7 @@ function applyTheme(t){
 }
 function initEvents(){
   $$(".tab").forEach(t=>t.onclick=()=>switchTab(t.dataset.tab));
+  $("#periodSeg").innerHTML=periodSegHTML(state.period);
   $$("#periodSeg button").forEach(b=>b.onclick=()=>{
     $$("#periodSeg button").forEach(x=>x.classList.remove("active")); b.classList.add("active");
     state.period=b.dataset.p; renderGrid();
