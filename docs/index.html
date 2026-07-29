@@ -48,6 +48,8 @@
   .brand{display:flex; align-items:center; gap:10px}
   .brand .dot{width:11px;height:11px;border-radius:50%;background:var(--up);box-shadow:0 0 0 4px color-mix(in srgb,var(--up) 22%,transparent)}
   .brand h1{font-size:19px; margin:0; letter-spacing:-.01em}
+  .brand h1 .home-link{color:var(--text-primary); text-decoration:none}
+  .brand h1 .home-link:hover{color:var(--series-1); text-decoration:underline; text-underline-offset:3px}
   .brand .sub{color:var(--muted); font-size:12px}
   .spacer{flex:1}
   .icon-btn{background:var(--surface-1); border:1px solid var(--border); color:var(--text-secondary);
@@ -141,6 +143,18 @@
   .info .v{font-size:14px; font-weight:600; font-variant-numeric:tabular-nums}
   .desc{margin-top:14px; color:var(--text-secondary); font-size:13px; line-height:1.6; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
 
+  /* ---- news ---- */
+  .news{margin-top:14px; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .news-h{display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; font-size:13px; font-weight:700; color:var(--text-secondary); margin-bottom:10px}
+  .news-ext{display:inline-flex; gap:12px; font-size:11.5px; font-weight:600}
+  .news-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px}
+  .news-list li{border-top:1px solid var(--border); padding-top:10px}
+  .news-list li:first-child{border-top:none; padding-top:0}
+  .news-list a{color:var(--text-primary); text-decoration:none; font-size:13px; font-weight:600; line-height:1.4; display:block}
+  .news-list a:hover{color:var(--series-1); text-decoration:underline; text-underline-offset:2px}
+  .news-meta{color:var(--muted); font-size:11px; margin-top:3px; font-variant-numeric:tabular-nums}
+  .news-empty{color:var(--muted); font-size:12px; font-style:italic; line-height:1.5}
+
   /* ---- editor ---- */
   .editbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:14px}
   .btn{border:1px solid var(--border); background:var(--surface-1); color:var(--text-primary); border-radius:10px; padding:9px 14px; font-size:13px; font-weight:600; display:inline-flex; align-items:center; gap:6px}
@@ -178,7 +192,7 @@
     <div class="brand">
       <span class="dot"></span>
       <div>
-        <h1>Stock Alert 대시보드</h1>
+        <h1><a class="home-link" href="https://leemgs.github.io/stock-alert/" title="Stock Alert 대시보드 홈으로 이동">Stock Alert 대시보드</a></h1>
         <div class="sub" id="genat">데이터 로딩 중…</div>
       </div>
     </div>
@@ -479,6 +493,7 @@ function rebuildEntries(){
       week52_high: pd?pd.week52_high:null, week52_low: pd?pd.week52_low:null,
       sector: pd?pd.sector:null, industry: pd?pd.industry:null,
       market_cap: pd?pd.market_cap:null, website: pd?pd.website:null,
+      news: pd?pd.news:null,
       series: pd?pd.series:null, hasData:!!pd, alert};
   });
 }
@@ -573,6 +588,27 @@ function renderGrid(){
 }
 function esc(s){ return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
+/* ---------- news ---------- */
+function newsHTML(e){
+  const name=(e.name||e.ticker||"").trim();
+  const gnews=`https://news.google.com/search?q=${encodeURIComponent(name)}&hl=ko&gl=KR&ceid=KR:ko`;
+  const ynews=`https://finance.yahoo.com/quote/${encodeURIComponent(e.ticker)}/news`;
+  const ext=`<span class="news-ext">
+      <a href="${gnews}" target="_blank" rel="noopener">Google 뉴스 ↗</a>
+      <a href="${ynews}" target="_blank" rel="noopener">Yahoo ↗</a>
+    </span>`;
+  let body;
+  if(Array.isArray(e.news) && e.news.length){
+    body=`<ul class="news-list">`+e.news.map(n=>{
+      const meta=[n.publisher,n.published].filter(Boolean).join(" · ");
+      return `<li><a href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.title)}</a>${meta?`<div class="news-meta">${esc(meta)}</div>`:""}</li>`;
+    }).join("")+`</ul>`;
+  } else {
+    body=`<div class="news-empty">수집된 헤드라인이 없습니다. 위 링크에서 최신 뉴스를 확인하세요. (다음 데이터 수집 후 헤드라인이 표시됩니다)</div>`;
+  }
+  return `<div class="news"><div class="news-h"><span>📰 최근 뉴스</span>${ext}</div>${body}</div>`;
+}
+
 /* ---------- detail modal ---------- */
 let bigChart=null;
 function openDetail(e){
@@ -612,6 +648,7 @@ function openDetail(e){
     `:`<div class="note" style="margin-top:16px">이 종목은 아직 시세가 수집되지 않았습니다. GitHub Actions가 <code>generate_dashboard_data.py</code>를 실행하면 차트가 표시됩니다.</div>`}
     <div class="info-grid">${info.map(([k,v])=>`<div class="info"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`).join("")}</div>
     ${e.desc?`<div class="desc">${esc(e.desc)}</div>`:""}
+    ${newsHTML(e)}
   `;
   $("#detailBg").classList.add("open");
   $("#detailClose").onclick=closeDetail;

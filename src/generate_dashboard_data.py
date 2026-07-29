@@ -23,6 +23,7 @@ Dashboard Data Generator
       "current", "prev_close", "change_pct",
       "week52_high", "week52_low", "sector", "industry",
       "market_cap", "website",
+      "news": [{"title","publisher","link","published"}, ...],  # 최근 뉴스
       "series": [["2021-07-05", 123.45], ...]   # [날짜, 종가(주봉)]
     }, ...
   },
@@ -95,6 +96,59 @@ def _clean(v):
         return None
 
 
+def _news_item(raw):
+    """yfinance 신/구 뉴스 스키마를 공통 형태로 정규화."""
+    if not isinstance(raw, dict):
+        return None
+    title = publisher = link = published = None
+    content = raw.get("content")
+    if isinstance(content, dict):
+        # 신규 스키마 (yfinance >= 0.2.40): {'content': {...}}
+        title = content.get("title")
+        prov = content.get("provider")
+        if isinstance(prov, dict):
+            publisher = prov.get("displayName")
+        for key in ("canonicalUrl", "clickThroughUrl"):
+            u = content.get(key)
+            if isinstance(u, dict) and u.get("url"):
+                link = u["url"]
+                break
+        published = content.get("pubDate") or content.get("displayTime")
+    else:
+        # 구 스키마: {'title','publisher','link','providerPublishTime'}
+        title = raw.get("title")
+        publisher = raw.get("publisher")
+        link = raw.get("link")
+        ts = raw.get("providerPublishTime")
+        if ts:
+            try:
+                published = datetime.datetime.utcfromtimestamp(int(ts)).strftime("%Y-%m-%d")
+            except Exception:
+                published = None
+    if not title or not link:
+        return None
+    if published and len(published) >= 10 and published[4] == "-":
+        published = published[:10]   # ISO datetime -> 날짜만
+    return {"title": title, "publisher": publisher,
+            "link": link, "published": published}
+
+
+def fetch_news(t, limit=6):
+    """종목 관련 최근 뉴스 헤드라인 (실패해도 무시)."""
+    try:
+        raw = t.news or []
+    except Exception:
+        return []
+    out = []
+    for item in raw:
+        n = _news_item(item)
+        if n:
+            out.append(n)
+        if len(out) >= limit:
+            break
+    return out
+
+
 def fetch_ticker(stock):
     tkr = stock["ticker"]
     t = yf.Ticker(tkr)
@@ -158,6 +212,9 @@ def fetch_ticker(stock):
     except Exception:
         pass
 
+    # --- 최근 뉴스 (실패해도 무시) ---
+    news = fetch_news(t)
+
     return {
         "name": stock["name"],
         "domain": stock["loc"],
@@ -175,6 +232,7 @@ def fetch_ticker(stock):
         "industry": industry,
         "market_cap": market_cap,
         "website": website,
+        "news": news,
         "series": series,
     }
 
