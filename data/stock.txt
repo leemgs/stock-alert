@@ -4,7 +4,7 @@ AI, Meta Platforms, META, 250, 900, 페이스북/인스타그램 및 메타버�
 AI, NVIDIA Corporation, NVDA, 150, 600, 로봇 AI 두뇌 | Isaac | GPU 설계/가속 컴퓨팅/AI 칩 및 물리 엔진
 AI, Satoshi Holdings (deepmind), 223310.KQ, 3389.04, 4950, 인공지능(AI) 및 딥러닝 기반 소프트웨어 기술 투자/개발
 AI, Microsoft, MSFT, 300, 484.00, OS(Windows)/클라우드(Azure)/오피스 소프트웨어 및 생성형 AI(Copilot)
-AI, SpaceX, SPCX, 109.35, 300, 민간 우주개발 및 재사용 우주선(Falcon/Starship)/우주인터넷(Starlink)
+AI, SpaceX, SPCX, 98.41, 300, 민간 우주개발 및 재사용 우주선(Falcon/Starship)/우주인터넷(Starlink)
 IT, Amazon.com, AMZN, 100, 310, 글로벌 전자상거래 및 클라우드 인프라(AWS)/물류 자동화 로봇
 IT, IonQ, IONQ, 29.72, 73.2, 양자 컴퓨터 시스템 및 클라우드 양자 컴퓨팅 서비스 상용화 선도
 
