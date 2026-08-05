@@ -163,7 +163,7 @@
   .btn.primary:hover{filter:brightness(1.06)}
   .btn.danger{color:var(--up); border-color:color-mix(in srgb,var(--up) 40%,var(--border))}
   .tablewrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-1)}
-  table{border-collapse:collapse; width:100%; font-size:13px; min-width:640px}
+  table{border-collapse:collapse; width:100%; font-size:13px; min-width:880px}
   th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top}
   th{color:var(--muted); font-size:11.5px; font-weight:700; position:sticky; top:0; background:var(--surface-1); z-index:1}
   tr:last-child td{border-bottom:none}
@@ -248,8 +248,9 @@
     <div class="tablewrap">
       <table id="editTable">
         <thead><tr>
-          <th>도메인</th><th>종목명</th><th>티커</th><th style="text-align:right">하락(매수)</th>
-          <th style="text-align:right">상승(매도)</th><th>설명</th><th>관리</th>
+          <th>도메인</th><th>종목명</th><th>티커</th><th style="text-align:right">현재가</th>
+          <th style="text-align:right">52주 최저</th><th style="text-align:right">52주 최고</th>
+          <th style="text-align:right">하락(매수)</th><th style="text-align:right">상승(매도)</th><th>설명</th><th>관리</th>
         </tr></thead>
         <tbody id="editBody"></tbody>
       </table>
@@ -677,11 +678,17 @@ function closeDetail(){ $("#detailBg").classList.remove("open"); bigChart=null; 
 function renderEditor(){
   const list=effectiveList();
   $("#editCount").textContent=`${list.length}개 종목`+(loadOverlay()?" · 편집됨(임시저장)":"");
-  $("#editBody").innerHTML=list.map((e,i)=>`
+  $("#editBody").innerHTML=list.map((e,i)=>{
+    const pd=DATA.tickers[e.ticker]||null;
+    const currency=pd?pd.currency:null;
+    return `
     <tr>
       <td>${esc(e.domain)}</td>
       <td><b>${esc(e.name)}</b></td>
       <td style="font-variant-numeric:tabular-nums">${esc(e.ticker)}</td>
+      <td class="num">${fmtPrice(pd?pd.current:null,currency)}</td>
+      <td class="num">${fmtPrice(pd?pd.week52_low:null,currency)}</td>
+      <td class="num">${fmtPrice(pd?pd.week52_high:null,currency)}</td>
       <td class="num">${e.down??""}</td>
       <td class="num">${e.up??""}</td>
       <td class="desc-c">${esc(e.desc)}</td>
@@ -689,7 +696,8 @@ function renderEditor(){
         <button class="mini" data-act="edit" data-i="${i}">수정</button>
         <button class="mini" data-act="del" data-i="${i}">삭제</button>
       </div></td>
-    </tr>`).join("") || `<tr><td colspan="7" class="empty">종목이 없습니다.</td></tr>`;
+    </tr>`;
+  }).join("") || `<tr><td colspan="10" class="empty">종목이 없습니다.</td></tr>`;
   $$("#editBody .mini").forEach(b=>b.onclick=()=>{
     const i=+b.dataset.i;
     if(b.dataset.act==="edit") openForm(i);
