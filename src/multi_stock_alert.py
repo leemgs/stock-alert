@@ -13,7 +13,7 @@ Files under /opt/stock_alert:
   - state.json            (runtime state)
   - history.json          (recent alerts log; auto-disabled on CI)
 """
-import os, sys, csv, json, smtplib, ssl, datetime, traceback
+import copy, os, sys, csv, json, smtplib, ssl, datetime, traceback
 from pathlib import Path
 from email.mime.text import MIMEText
 
@@ -165,15 +165,27 @@ def load_stocks(path:Path):
     return items
 
 def load_state():
-    if STATE_PATH.exists():
-        try: return json.loads(STATE_PATH.read_text(encoding="utf-8"))
-        except: pass
-    return {
+    default = {
         "last_alert_date":{}, "last_price":{},
         "alert_counters":{"date":None,"per":{}},
         "last_alert_ts":{},
         "global_counter":{"date":None,"count":0}
     }
+    if STATE_PATH.exists():
+        try:
+            loaded = json.loads(STATE_PATH.read_text(encoding="utf-8"))
+            if not isinstance(loaded, dict):
+                raise ValueError("state root must be an object")
+            # 이전 버전의 state 또는 빈({}) 캐시도 안전하게 마이그레이션한다.
+            for key, value in default.items():
+                loaded.setdefault(key, copy.deepcopy(value))
+            loaded["alert_counters"].setdefault("date", None)
+            loaded["alert_counters"].setdefault("per", {})
+            loaded["global_counter"].setdefault("date", None)
+            loaded["global_counter"].setdefault("count", 0)
+            return loaded
+        except: pass
+    return default
 
 def save_state(st): STATE_PATH.write_text(json.dumps(st,ensure_ascii=False),encoding="utf-8")
 
@@ -288,6 +300,16 @@ def send_email(cfg, subj, body, subtype="plain"):
     with smtplib.SMTP(cfg["SMTP_HOST"], cfg["SMTP_PORT"], timeout=20) as s:
         s.ehlo(); s.starttls(context=ctx); s.login(cfg["SMTP_USER"], cfg["SMTP_PASS"])
         s.sendmail(cfg["EMAIL_FROM"], to_addrs, msg.as_string())
+
+def validate_email_config(cfg):
+    """알림을 놓치기 전에 필수 SMTP 설정 오류를 명확하게 실패시킨다."""
+    required = ("SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "EMAIL_FROM", "EMAIL_TO")
+    missing = [key for key in required if not cfg.get(key)]
+    if missing:
+        raise RuntimeError(
+            "이메일 필수 설정 누락: " + ", ".join(missing)
+            + " (GitHub Actions의 SMTP_PASS secret과 data/email.json을 확인하세요)"
+        )
 
 def generate_html_body(cfg, ts_str, down_breaches, up_breaches, errors, rate_limited_notes):
     """
@@ -502,6 +524,7 @@ def rl_commit(state, ticker, kind, now_dt):
 # ---------- Main ----------
 def main():
     cfg = load_config(CONFIG_PATH)
+    validate_email_config(cfg)
     info_type = cfg.get("INFO_TYPE", "info").lower()
 
     ts = now_tz(cfg["TZ"]); today=ts.strftime("%Y-%m-%d"); ts_str=ts.strftime("%Y-%m-%d %H:%M:%S %Z")
@@ -512,9 +535,12 @@ def main():
         return
 
     stocks=load_stocks(STOCKS_PATH)
-    state =load_state()
+    state = load_state()
 
     rl_reset_if_new_day(state, today)
+    # 알림 판정 상태는 메일 발송 성공 전까지 임시 복사본에만 기록한다. SMTP 실패 시
+    # 임계값/중복제거 상태를 소비하지 않아 다음 실행에서 동일 알림을 재시도할 수 있다.
+    pending_state = copy.deepcopy(state)
 
     down_breaches=[]; up_breaches=[]; errors=[]; new_events=[]
     rate_limited_notes=[]
@@ -539,14 +565,14 @@ def main():
                             alert=(last_day!=today) or crossed
                         else: alert=True
                 if alert:
-                    can, why = rl_can_send(cfg, state, cfg["TZ"], tkr, "down", ts)
+                    can, why = rl_can_send(cfg, pending_state, cfg["TZ"], tkr, "down", ts)
                     if can:
                         # [Mission] Update threshold
                         down_pct = cfg["UPDATE_THRESHOLD_DOWN_PERCENT"]
                         new_val = dth * (1.0 - (down_pct / 100.0))
                         down_breaches.append((s["loc"], s["name"], tkr, price, dth, new_val, s.get("desc", "")))
-                        state["last_alert_date"][f"{tkr}|down"]=today
-                        rl_commit(state, tkr, "down", ts)
+                        pending_state["last_alert_date"][f"{tkr}|down"]=today
+                        rl_commit(pending_state, tkr, "down", ts)
                         new_events.append({"ts":ts_str,"dir":"down","name":s["name"],"ticker":tkr,"price":price,"threshold":dth})
                         
                         if tkr not in updates: updates[tkr] = {}
@@ -565,14 +591,14 @@ def main():
                             alert=(last_day!=today) or crossed
                         else: alert=True
                 if alert:
-                    can, why = rl_can_send(cfg, state, cfg["TZ"], tkr, "up", ts)
+                    can, why = rl_can_send(cfg, pending_state, cfg["TZ"], tkr, "up", ts)
                     if can:
                         # [Mission] Update threshold
                         up_pct = cfg["UPDATE_THRESHOLD_UP_PERCENT"]
                         new_val = uth * (1.0 + (up_pct / 100.0))
                         up_breaches.append((s["loc"], s["name"], tkr, price, uth, new_val, s.get("desc", "")))
-                        state["last_alert_date"][f"{tkr}|up"]=today
-                        rl_commit(state, tkr, "up", ts)
+                        pending_state["last_alert_date"][f"{tkr}|up"]=today
+                        rl_commit(pending_state, tkr, "up", ts)
                         new_events.append({"ts":ts_str,"dir":"up","name":s["name"],"ticker":tkr,"price":price,"threshold":uth})
                         
                         if tkr not in updates: updates[tkr] = {}
@@ -580,7 +606,8 @@ def main():
                     else:
                         rate_limited_notes.append(f"{tkr}|up 제한({why})")
 
-            state["last_price"][tkr]=price
+            state["last_price"][tkr] = price
+            pending_state["last_price"][tkr] = price
 
         except Exception as e:
             errors.append(f"{tkr}: {e}")
@@ -591,9 +618,12 @@ def main():
         
         try:
             send_email(cfg, "[Stock Alert] 임계 도달 종목 (상/하한)", html_body, subtype="html")
-            print(LOG_PREFIX+"메일 발송 완료")
         except Exception as e:
-            print(LOG_PREFIX+f"메일 발송 실패: {e}", file=sys.stderr)
+            # 실패를 성공(exit 0)으로 숨기지 않는다. 워크플로가 실패 알림을 표시하며,
+            # 아래 임계값 갱신/상태 저장도 실행되지 않는다.
+            raise RuntimeError(f"임계 알림 메일 발송 실패: {e}") from e
+        print(LOG_PREFIX+"메일 발송 완료")
+        state = pending_state
 
         url = cfg.get("SLACK_WEBHOOK_URL")
         if url:

@@ -13,6 +13,9 @@ on:
 jobs:
   run-alerts:
     runs-on: ubuntu-latest
+    concurrency:
+      group: stock-alert-state
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
@@ -23,21 +26,25 @@ jobs:
         with:
           python-version: "3.11"
 
-      # ✅ 캐시 복원 (올바른 들여쓰기)
-      - name: Restore history.json cache
+      - name: Restore runtime state cache
         id: restore-history
         uses: actions/cache/restore@v4
         with:
-          path: data/history.json
-          key: ${{ runner.os }}-history-${{ github.run_number }}
+          path: |
+            data/state.json
+            data/history.json
+          key: ${{ runner.os }}-stock-alert-state-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-history-
+            ${{ runner.os }}-stock-alert-state-
 
-      - name: Ensure history.json exists
+      - name: Ensure runtime state files exist
         run: |
           mkdir -p data
           if [ ! -f data/history.json ]; then
-            echo '{}' > data/history.json
+            echo '[]' > data/history.json
+          fi
+          if [ ! -f data/state.json ]; then
+            echo '{}' > data/state.json
           fi
 
       - name: Install deps
@@ -57,7 +64,7 @@ jobs:
           python src/multi_stock_alert.py
 
       - name: Sync stock.txt back and commit
-        if: always()
+        if: success()
         run: |
           if ! git diff --quiet data/stock.txt; then
             git config --local user.email "action@github.com"
@@ -69,9 +76,11 @@ jobs:
             echo "No changes in stock.txt"
           fi
 
-      - name: Save history.json cache
+      - name: Save runtime state cache
         if: always()
         uses: actions/cache/save@v4
         with:
-          path: data/history.json
-          key: ${{ runner.os }}-history-${{ github.run_number }}
+          path: |
+            data/state.json
+            data/history.json
+          key: ${{ runner.os }}-stock-alert-state-${{ github.run_id }}

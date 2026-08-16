@@ -239,6 +239,17 @@ gh workflow run "Daily Stock Report (1-hour)"
 gh workflow run "Weekly Stock Report (Saturday 9 AM)"
 ```
 
+이메일이 오지 않을 때는 Actions에서 **Daily Stock Report (1-hour)**를 수동 실행하고
+`test_email`을 체크합니다. 테스트 실행이 실패하면 해당 실행의 `Run alerts` 로그에서
+`SMTP_PASS` 누락, Gmail 앱 비밀번호 만료/폐기, SMTP 인증·네트워크 오류를 확인합니다.
+일반 감시 실행도 SMTP 필수 설정이 없거나 실제 임계 알림 발송이 실패하면 성공으로
+처리하지 않으므로, GitHub Actions의 실패 상태에서 장애를 바로 확인할 수 있습니다.
+
+> **알림 유실 방지:** 메일 전송에 성공한 뒤에만 중복 방지 상태와 상·하한 임계값을
+> 소비합니다. SMTP 장애가 발생하면 임계값을 그대로 유지해 다음 스케줄 실행에서
+> 다시 발송을 시도합니다. `data/state.json`과 `data/history.json`은 Actions cache에
+> 함께 보존되어 실행 간 일일 중복 방지와 rate-limit도 이어집니다.
+
 ### 3️⃣ 실행 주기 (UTC 기준)
 
 * 알림: `0 */1 * * *` → 1시간마다
