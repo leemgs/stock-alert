@@ -11,6 +11,21 @@ import multi_stock_alert as alert
 
 
 class RuntimeStateTests(unittest.TestCase):
+    def test_alert_email_colors_buy_blue_and_sell_red(self):
+        cfg = {
+            "UPDATE_THRESHOLD_DOWN_PERCENT": 10,
+            "UPDATE_THRESHOLD_UP_PERCENT": 10,
+        }
+        down = [("AI", "Buy", "BUY", 90.0, 100.0, 90.0, "")]
+        up = [("AI", "Sell", "SELL", 110.0, 100.0, 110.0, "")]
+
+        html = alert.generate_html_body(cfg, "2026-08-17", down, up, [], [])
+
+        self.assertIn("하락 목표 도달 (매수)", html)
+        self.assertIn("color:#2563eb;", html)
+        self.assertIn("상승 목표 도달 (매도)", html)
+        self.assertIn("color:#dc2626;", html)
+
     def test_empty_cached_state_is_migrated(self):
         with tempfile.TemporaryDirectory() as tmp:
             state_path = Path(tmp) / "state.json"

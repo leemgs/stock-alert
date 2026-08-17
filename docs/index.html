@@ -103,6 +103,8 @@
   .card .price{font-size:21px; font-weight:700; letter-spacing:-.02em; margin-top:10px}
   .delta{font-size:12.5px; font-weight:700; font-variant-numeric:tabular-nums; display:inline-flex; align-items:center; gap:3px}
   .delta.up{color:var(--up)} .delta.down{color:var(--down)} .delta.flat{color:var(--muted)}
+  .target-buy{color:var(--down)!important;font-weight:750}
+  .target-sell{color:var(--up)!important;font-weight:750}
   .spark{width:100%; height:44px; display:block; margin:8px 0 6px}
   .rangebar{margin-top:4px}
   .rangebar .track{position:relative; height:6px; border-radius:4px; background:linear-gradient(90deg,color-mix(in srgb,var(--down) 55%,transparent),var(--grid) 45%,var(--grid) 55%,color-mix(in srgb,var(--up) 55%,transparent))}
@@ -544,7 +546,7 @@ function rangeBarHTML(e){
   if(e.down==null||e.up==null||e.current==null||e.up<=e.down) return "";
   let pos=(e.current-e.down)/(e.up-e.down); pos=Math.max(0,Math.min(1,pos));
   return `<div class="rangebar"><div class="track"><div class="mark" style="left:${(pos*100).toFixed(1)}%"></div></div>
-    <div class="lbls"><span>${fmtPrice(e.down,e.currency)}</span><span>${fmtPrice(e.up,e.currency)}</span></div></div>`;
+    <div class="lbls"><span class="target-buy">매수 ${fmtPrice(e.down,e.currency)}</span><span class="target-sell">매도 ${fmtPrice(e.up,e.currency)}</span></div></div>`;
 }
 function w52HTML(e){
   const lo=e.week52_low, hi=e.week52_high;
@@ -643,8 +645,8 @@ function openDetail(e){
       <div class="chartwrap"><canvas class="big" id="bigCanvas"></canvas><div class="tooltip" id="bigTip"></div></div>
       <div class="legend">
         <span><i style="background:var(--series-1)"></i>주가</span>
-        <span><i style="background:var(--down)"></i>하락 목표(매수) ${e.down!=null?fmtPrice(e.down,e.currency):"—"}${distDown!=null?` · 현재가 대비 ${distDown>=0?"+":""}${distDown.toFixed(1)}%`:""}</span>
-        <span><i style="background:var(--up)"></i>상승 목표(매도) ${e.up!=null?fmtPrice(e.up,e.currency):"—"}${distUp!=null?` · ${distUp>=0?"여유 +":""}${distUp.toFixed(1)}%`:""}</span>
+        <span class="target-buy"><i style="background:var(--down)"></i>하락 목표(매수) ${e.down!=null?fmtPrice(e.down,e.currency):"—"}${distDown!=null?` · 현재가 대비 ${distDown>=0?"+":""}${distDown.toFixed(1)}%`:""}</span>
+        <span class="target-sell"><i style="background:var(--up)"></i>상승 목표(매도) ${e.up!=null?fmtPrice(e.up,e.currency):"—"}${distUp!=null?` · ${distUp>=0?"여유 +":""}${distUp.toFixed(1)}%`:""}</span>
       </div>
     `:`<div class="note" style="margin-top:16px">이 종목은 아직 시세가 수집되지 않았습니다. GitHub Actions가 <code>generate_dashboard_data.py</code>를 실행하면 차트가 표시됩니다.</div>`}
     <div class="info-grid">${info.map(([k,v])=>`<div class="info"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`).join("")}</div>
@@ -689,8 +691,8 @@ function renderEditor(){
       <td class="num">${fmtPrice(pd?pd.current:null,currency)}</td>
       <td class="num">${fmtPrice(pd?pd.week52_low:null,currency)}</td>
       <td class="num">${fmtPrice(pd?pd.week52_high:null,currency)}</td>
-      <td class="num">${e.down??""}</td>
-      <td class="num">${e.up??""}</td>
+      <td class="num target-buy">${e.down??""}</td>
+      <td class="num target-sell">${e.up??""}</td>
       <td class="desc-c">${esc(e.desc)}</td>
       <td><div class="rowbtns">
         <button class="mini" data-act="edit" data-i="${i}">수정</button>

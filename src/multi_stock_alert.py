@@ -331,6 +331,8 @@ def generate_html_body(cfg, ts_str, down_breaches, up_breaches, errors, rate_lim
         .ticker { font-weight: bold; font-size: 16px; color: #2c3e50; }
         .price-info { margin-top: 5px; font-size: 15px; }
         .price-value { font-family: 'Courier New', Courier, monospace; font-weight: bold; }
+        .buy-value { color: #2563eb; font-weight: bold; }
+        .sell-value { color: #dc2626; font-weight: bold; }
         .footer { background: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #eee; }
         .footer a { color: #3498db; text-decoration: none; }
         .error-section { background: #fff5f5; border-left: 4px solid #fc8181; padding: 10px 15px; margin-top: 20px; border-radius: 0 4px 4px 0; }
@@ -346,7 +348,7 @@ def generate_html_body(cfg, ts_str, down_breaches, up_breaches, errors, rate_lim
     down_html = ""
     down_pct = cfg.get("UPDATE_THRESHOLD_DOWN_PERCENT", 10)
     if down_breaches:
-        down_html = '<div class="section-title down-title">📉 하한 돌파 (현재가 ≤ 하한)</div>'
+        down_html = '<div class="section-title down-title">📉 하락 목표 도달 (매수)</div>'
         # Group by domain
         down_by_domain = {}
         for loc, n, t, p, th, nth, desc in down_breaches:
@@ -361,7 +363,9 @@ def generate_html_body(cfg, ts_str, down_breaches, up_breaches, errors, rate_lim
                     <div class="ticker">{n} <span style="color:#7f8c8d; font-weight:normal;">({t})</span></div>
                     {desc_div}
                     <div class="price-info">
-                        현재가 <span class="price-value" style="color:#3498db;">{p:.2f}</span> ≤ 하한가 <span class="price-value">{th:.2f}</span> ({down_pct:g}% 자동 하향:{nth:.2f})
+                        현재가 <span class="price-value buy-value" style="color:#2563eb;">{p:.2f}</span>
+                        ≤ 매수 목표 <span class="price-value buy-value" style="color:#2563eb;">{th:.2f}</span>
+                        ({down_pct:g}% 자동 하향: <span class="price-value buy-value" style="color:#2563eb;">{nth:.2f}</span>)
                     </div>
                 </div>
                 """
@@ -369,7 +373,7 @@ def generate_html_body(cfg, ts_str, down_breaches, up_breaches, errors, rate_lim
     up_pct = cfg.get("UPDATE_THRESHOLD_UP_PERCENT", 10)
     up_html = ""
     if up_breaches:
-        up_html = '<div class="section-title up-title">📈 상한 돌파 (현재가 ≥ 상한)</div>'
+        up_html = '<div class="section-title up-title">📈 상승 목표 도달 (매도)</div>'
         # Group by domain
         up_by_domain = {}
         for loc, n, t, p, th, nth, desc in up_breaches:
@@ -384,7 +388,9 @@ def generate_html_body(cfg, ts_str, down_breaches, up_breaches, errors, rate_lim
                     <div class="ticker">{n} <span style="color:#7f8c8d; font-weight:normal;">({t})</span></div>
                     {desc_div}
                     <div class="price-info">
-                        현재가 <span class="price-value" style="color:#e74c3c;">{p:.2f}</span> ≥ 상한가 <span class="price-value">{th:.2f}</span> ({up_pct:g}% 자동 상향:{nth:.2f})
+                        현재가 <span class="price-value sell-value" style="color:#dc2626;">{p:.2f}</span>
+                        ≥ 매도 목표 <span class="price-value sell-value" style="color:#dc2626;">{th:.2f}</span>
+                        ({up_pct:g}% 자동 상향: <span class="price-value sell-value" style="color:#dc2626;">{nth:.2f}</span>)
                     </div>
                 </div>
                 """
