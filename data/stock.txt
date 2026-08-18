@@ -1,6 +1,6 @@
 # === AI ===
 AI, Alphabet Inc. Class C, GOOG, 310, 420, 구글 검색/안드로이드/유튜브 및 AI 연구(DeepMind)
-AI, Meta Platforms, META, 250, 484.00, 페이스북/인스타그램 및 메타버스/인공지능(LLM Llama) 연구 개발
+AI, Meta Platforms, META, 250, 532.40, 페이스북/인스타그램 및 메타버스/인공지능(LLM Llama) 연구 개발
 AI, NVIDIA Corporation, NVDA, 150, 600, 로봇 AI 두뇌 | Isaac | GPU 설계/가속 컴퓨팅/AI 칩 및 물리 엔진
 AI, Satoshi Holdings (deepmind), 223310.KQ, 2470.62, 4950, 인공지능(AI) 및 딥러닝 기반 소프트웨어 기술 투자/개발
 AI, Microsoft, MSFT, 300, 532.4, OS(Windows)/클라우드(Azure)/오피스 소프트웨어 및 생성형 AI(Copilot)
@@ -10,7 +10,7 @@ AI, SpaceX, SPCX, 98.41, 300, 민간 우주개발 및 재사용 우주선(Falcon
 IT, Amazon.com, AMZN, 100, 310, 글로벌 전자상거래 및 클라우드 인프라(AWS)/물류 자동화 로봇
 IT, IonQ, IONQ, 31, 73.2, 양자 컴퓨터 시스템 및 클라우드 양자 컴퓨팅 서비스 상용화 선도
 IT, NAVER Corporation, 035420.KS, 150000, 310000, 포털 검색/쇼핑/웹툰/클라우드 및 AI 기술 중심의 인터넷 플랫폼
-IT, SK hynix, 000660.KS, 1863000.00, 3000000, DRAM 및 NAND Flash 등 글로벌 메모리 반도체 전문 제조
+IT, SK hynix, 000660.KS, 1676700.00, 3000000, DRAM 및 NAND Flash 등 글로벌 메모리 반도체 전문 제조
 IT, Samsung Electronics, 005930.KS, 60000, 307734.77, 메모리 반도체/스마트폰/디스플레이 및 가전 글로벌 선도 기업
 IT, Samsung SDS, 018260.KS, 180000, 400000, IT 서비스(SI)/클라우드/물류BPO(첼로) 및 생성형 AI 기반 디지털 전환 솔루션
 IT, LG전자, 066570.KS, 131220, 270000, 생활가전/TV/자동차 전장 부품 및 미래 로봇·스마트팩토리 솔루션
