@@ -52,7 +52,7 @@ def load_config() -> dict:
     # 환경변수가 명시적으로 지정된 경우 최우선 적용 (기존 환경변수 동작 보장)
     for env_k, env_v in os.environ.items():
         if env_v.strip() != "":
-            if env_k in {"SMTP_HOST", "SMTP_PORT", "SMTP_USER", "EMAIL_FROM", "EMAIL_TO", "SMTP_PASS"}:
+            if env_k in {"SMTP_HOST", "SMTP_PORT", "SMTP_USER", "EMAIL_FROM", "EMAIL_TO", "GMAIL_APP_PASSWORD"}:
                 c[env_k] = env_v.strip()
 
     c.setdefault("SMTP_PORT", "587")
@@ -63,11 +63,11 @@ def send_email(cfg: dict, subject: str, html_body: str):
     host = cfg.get("SMTP_HOST")
     port = cfg.get("SMTP_PORT", 587)
     user = cfg.get("SMTP_USER")
-    pw = cfg.get("SMTP_PASS")
+    pw = cfg.get("GMAIL_APP_PASSWORD")
     to_list = cfg.get("EMAIL_TO")
     
     if not host or not user or not pw or not to_list:
-        print("[WEEKLY-REPORT] 메일 발송 설정(SMTP_HOST, SMTP_USER, SMTP_PASS, EMAIL_TO)이 누락되었습니다.")
+        print("[WEEKLY-REPORT] 메일 발송 설정(SMTP_HOST, SMTP_USER, GMAIL_APP_PASSWORD, EMAIL_TO)이 누락되었습니다.")
         return
 
     to_addrs = [x.strip() for x in to_list.split(",") if x.strip()]

@@ -159,7 +159,7 @@ vi data/stock.txt
 # 4. 이메일 설정 및 실행 테스트
 # (1) data/email.json 파일에 이메일 정보 설정 (아래 4.1 참고)
 # (2) SMTP 비밀번호 환경변수 설정 후 실행
-export SMTP_PASS=your_app_password
+export GMAIL_APP_PASSWORD=your_app_password
 python src/multi_stock_alert.py
 
 # 5. 크론 등록 (1시간마다)
@@ -184,7 +184,7 @@ IT, Samsung Electronics, 005930.KS, 60000.00, 384326.25, 메모리 반도체/스
 
 ### `email.json` (이메일 설정 파일)
 
-유지보수 및 운영 편의성을 위해 민감정보인 `SMTP_PASS`를 제외한 나머지 이메일/SMTP 설정은 `./data/email.json` 파일에서 관리합니다.
+유지보수 및 운영 편의성을 위해 민감정보인 `GMAIL_APP_PASSWORD`를 제외한 나머지 이메일/SMTP 설정은 `./data/email.json` 파일에서 관리합니다.
 
 ```json
 {
@@ -202,7 +202,7 @@ IT, Samsung Electronics, 005930.KS, 60000.00, 384326.25, 메모리 반도체/스
 
 ### 환경 변수 및 GitHub Secrets
 
-* **`SMTP_PASS`**: 보안 유지를 위해 환경변수(로컬 실행 시) 또는 **GitHub Secrets**(GitHub Actions 실행 시)로 설정합니다.
+* **`GMAIL_APP_PASSWORD`**: 보안 유지를 위해 환경변수(로컬 실행 시) 또는 **GitHub Secrets**(GitHub Actions 실행 시)로 설정합니다.
 * **`SLACK_WEBHOOK_URL`**: Slack 알림 연동을 원할 경우 환경변수 또는 **GitHub Secrets**에 등록하여 사용합니다.
 
 ---
@@ -217,12 +217,12 @@ IT, Samsung Electronics, 005930.KS, 60000.00, 384326.25, 메모리 반도체/스
 
 ### 1️⃣ Secrets 및 Variables 등록 (Settings → Secrets and variables → Actions)
 
-이메일 설정을 `./data/email.json` 파일에서 관리하게 됨으로써, GitHub 설정에서는 **`SMTP_PASS`** (이메일 비밀번호) 및 **`SLACK_WEBHOOK_URL`** 만 **Repository Secrets**에 등록하시면 됩니다.
+이메일 설정을 `./data/email.json` 파일에서 관리하게 됨으로써, GitHub 설정에서는 **`GMAIL_APP_PASSWORD`** (이메일 비밀번호) 및 **`SLACK_WEBHOOK_URL`** 만 **Repository Secrets**에 등록하시면 됩니다.
 
 #### 🔒 Repository Secrets (보안 정보)
 | Key | 필수여부 | 기본값(Default) | 설명 |
 | --- | --- | --- | --- |
-| `SMTP_PASS` | 필수 | (없음) | 이메일 발송용 SMTP 앱 비밀번호 |
+| `GMAIL_APP_PASSWORD` | 필수 | (없음) | 이메일 발송용 Gmail 앱 비밀번호(App Password) |
 | `SLACK_WEBHOOK_URL` | 선택 | (없음) | Slack 웹훅 URL |
 
 #### ⚙️ Repository Variables (일반 설정 정보)
@@ -241,7 +241,7 @@ gh workflow run "Weekly Stock Report (Saturday 9 AM)"
 
 이메일이 오지 않을 때는 Actions에서 **Daily Stock Report (1-hour)**를 수동 실행하고
 `test_email`을 체크합니다. 테스트 실행이 실패하면 해당 실행의 `Run alerts` 로그에서
-`SMTP_PASS` 누락, Gmail 앱 비밀번호 만료/폐기, SMTP 인증·네트워크 오류를 확인합니다.
+`GMAIL_APP_PASSWORD` 누락, Gmail 앱 비밀번호 만료/폐기, SMTP 인증·네트워크 오류를 확인합니다.
 일반 감시 실행도 SMTP 필수 설정이 없거나 실제 임계 알림 발송이 실패하면 성공으로
 처리하지 않으므로, GitHub Actions의 실패 상태에서 장애를 바로 확인할 수 있습니다.
 

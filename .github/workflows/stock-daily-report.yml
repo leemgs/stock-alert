@@ -56,7 +56,7 @@ jobs:
 
       - name: Run alerts
         env:
-          SMTP_PASS: ${{ secrets.SMTP_PASS || vars.SMTP_PASS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD || vars.GMAIL_APP_PASSWORD }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
           # workflow_dispatch 에서 test_email 체크 시 샘플 테스트 메일 1회 발송 (스케줄 실행 시엔 빈 값)
           STOCK_ALERT_TEST: ${{ github.event.inputs.test_email }}

@@ -52,7 +52,7 @@ class RuntimeStateTests(unittest.TestCase):
                 "SMTP_HOST": "smtp.example.com",
                 "SMTP_PORT": "587",
                 "SMTP_USER": "bot@example.com",
-                "SMTP_PASS": "secret",
+                "GMAIL_APP_PASSWORD": "secret",
                 "EMAIL_FROM": "bot@example.com",
                 "EMAIL_TO": "owner@example.com",
             }

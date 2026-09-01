@@ -25,7 +25,7 @@ jobs:
 
       - name: Run Weekly Report
         env:
-          SMTP_PASS: ${{ secrets.SMTP_PASS || vars.SMTP_PASS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD || vars.GMAIL_APP_PASSWORD }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TZ: Asia/Seoul
         run: |

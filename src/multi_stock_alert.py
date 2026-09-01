@@ -89,7 +89,7 @@ def load_config(path: Path)->dict:
     # 환경변수가 명시적으로 지정된 경우 최우선 적용 (기존 환경변수 동작 보장)
     for env_k, env_v in os.environ.items():
         if env_v.strip() != "":
-            if env_k in {"SMTP_HOST", "SMTP_PORT", "SMTP_USER", "EMAIL_FROM", "EMAIL_TO", "SMTP_PASS"}:
+            if env_k in {"SMTP_HOST", "SMTP_PORT", "SMTP_USER", "EMAIL_FROM", "EMAIL_TO", "GMAIL_APP_PASSWORD"}:
                 c[env_k] = env_v.strip()
 
     # defaults
@@ -298,17 +298,17 @@ def send_email(cfg, subj, body, subtype="plain"):
     msg["Subject"]=subj; msg["From"]=cfg["EMAIL_FROM"]; msg["To"]=", ".join(to_addrs)
     ctx=ssl.create_default_context()
     with smtplib.SMTP(cfg["SMTP_HOST"], cfg["SMTP_PORT"], timeout=20) as s:
-        s.ehlo(); s.starttls(context=ctx); s.login(cfg["SMTP_USER"], cfg["SMTP_PASS"])
+        s.ehlo(); s.starttls(context=ctx); s.login(cfg["SMTP_USER"], cfg["GMAIL_APP_PASSWORD"])
         s.sendmail(cfg["EMAIL_FROM"], to_addrs, msg.as_string())
 
 def validate_email_config(cfg):
     """알림을 놓치기 전에 필수 SMTP 설정 오류를 명확하게 실패시킨다."""
-    required = ("SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "EMAIL_FROM", "EMAIL_TO")
+    required = ("SMTP_HOST", "SMTP_PORT", "SMTP_USER", "GMAIL_APP_PASSWORD", "EMAIL_FROM", "EMAIL_TO")
     missing = [key for key in required if not cfg.get(key)]
     if missing:
         raise RuntimeError(
             "이메일 필수 설정 누락: " + ", ".join(missing)
-            + " (GitHub Actions의 SMTP_PASS secret과 data/email.json을 확인하세요)"
+            + " (GitHub Actions의 GMAIL_APP_PASSWORD secret과 data/email.json을 확인하세요)"
         )
 
 def generate_html_body(cfg, ts_str, down_breaches, up_breaches, errors, rate_limited_notes):
@@ -445,10 +445,10 @@ def _test_mode_enabled() -> bool:
 
 def send_test_email(cfg, ts_str):
     """임계치 돌파 여부와 무관하게 샘플 알림 메일을 1회 강제 발송(설정 점검용)."""
-    missing = [k for k in ("SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "EMAIL_TO") if not cfg.get(k)]
+    missing = [k for k in ("SMTP_HOST", "SMTP_PORT", "SMTP_USER", "GMAIL_APP_PASSWORD", "EMAIL_TO") if not cfg.get(k)]
     if missing:
         print(LOG_PREFIX + f"[TEST] 발송 불가 — 누락된 설정: {', '.join(missing)} "
-              f"(SMTP_PASS 는 GitHub Actions 시크릿/환경변수로 주입되어야 합니다)", file=sys.stderr)
+              f"(GMAIL_APP_PASSWORD 는 GitHub Actions 시크릿/환경변수로 주입되어야 합니다)", file=sys.stderr)
         sys.exit(1)
 
     # 예시(샘플) 데이터 — (loc, name, ticker, price, threshold, new_threshold, desc)
