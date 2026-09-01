@@ -93,6 +93,25 @@ def send_email(cfg: dict, subject: str, html_body: str):
         print(f"[WEEKLY-REPORT] 이메일 발송 성공: {to_list}")
     except Exception as e:
         print(f"[WEEKLY-REPORT] 이메일 발송 실패: {e}")
+        # 이메일(Gmail SMTP) 전송 실패를 GitHub 이슈로 등록
+        try:
+            now = datetime.now(pytz.timezone(cfg.get("TZ", "Asia/Seoul")))
+            fail_title = f"[Stock Alert] 주간 리포트 이메일 전송 실패 — {now.strftime('%Y-%m-%d')}"
+            fail_body = (
+                "## 📧 주간 리포트 이메일(Gmail SMTP) 전송 실패\n\n"
+                "주간 리포트 이메일 발송이 실패했습니다. Gmail 앱 비밀번호"
+                "(`GMAIL_APP_PASSWORD`) 또는 SMTP 설정을 확인해 주세요.\n\n"
+                "| 항목 | 값 |\n| --- | --- |\n"
+                f"| 발생 시각 | {now.strftime('%Y-%m-%d %H:%M:%S %Z')} |\n"
+                f"| 메일 제목 | {subject} |\n"
+                f"| SMTP 호스트 | {host} |\n"
+                f"| SMTP 사용자 | {user} |\n"
+                f"| 수신자 | {to_list} |\n"
+                f"| 오류 메시지 | `{e}` |\n"
+            )
+            create_github_issue(cfg, fail_title, fail_body)
+        except Exception as ee:
+            print(f"[WEEKLY-REPORT] 실패 이슈 등록 중 에러(무시): {ee}")
 
 def create_github_issue(cfg: dict, subject: str, body_markdown: str):
     token = os.environ.get("GITHUB_TOKEN") or cfg.get("GITHUB_TOKEN")

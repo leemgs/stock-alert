@@ -32,6 +32,9 @@ HISTORY_PATH= BASE / "history.json"
 LOG_PREFIX  = "[STOCK-ALERT] "
 GITHUB_URL = "https://github.com/leemgs/stock-alert"
 HOMEPAGE_URL = "https://leemgs.github.io/stock-alert/"
+GITHUB_API = "https://api.github.com"
+# 이메일 발송 실패 시 자동 등록되는 GitHub 이슈에 붙는 라벨
+EMAIL_FAIL_LABEL = "email-failure"
 
 
 # ---------- Helpers: env / CI detection ----------
@@ -301,6 +304,109 @@ def send_email(cfg, subj, body, subtype="plain"):
         s.ehlo(); s.starttls(context=ctx); s.login(cfg["SMTP_USER"], cfg["GMAIL_APP_PASSWORD"])
         s.sendmail(cfg["EMAIL_FROM"], to_addrs, msg.as_string())
 
+
+def report_email_failure_to_github(cfg, subj, error):
+    """이메일(Gmail SMTP) 전송 실패를 GitHub 이슈로 등록한다.
+
+    - GITHUB_TOKEN(또는 GH_TOKEN) 이 없으면 조용히 건너뛴다(로컬 실행 등).
+    - 동일 라벨(email-failure)의 '열린' 이슈가 이미 있으면 새 이슈 대신 댓글을
+      추가하여 매시간 실행 시 이슈가 중복 생성되는 것을 방지한다.
+    - 이 함수는 어떤 예외도 밖으로 던지지 않는다(원래의 발송 실패 처리를 방해하지 않기 위함).
+    반환값: 이슈/댓글 등록 성공 여부(bool).
+    """
+    try:
+        token = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
+        if not token:
+            print(LOG_PREFIX + "GITHUB_TOKEN 미설정 — GitHub 이슈 등록을 건너뜁니다.", file=sys.stderr)
+            return False
+        repo = os.getenv("GITHUB_REPOSITORY") or GITHUB_URL.split("github.com/", 1)[-1]
+        api = f"{GITHUB_API}/repos/{repo}"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
+
+        tz = cfg.get("TZ", "Asia/Seoul")
+        now = datetime.datetime.now(pytz.timezone(tz))
+        ts_str = now.strftime("%Y-%m-%d %H:%M:%S %Z")
+        run_url = ""
+        run_id = os.getenv("GITHUB_RUN_ID")
+        if run_id:
+            run_url = f"{GITHUB_URL}/actions/runs/{run_id}"
+
+        body = (
+            "## 📧 이메일(Gmail SMTP) 전송 실패\n\n"
+            "주식 알림 이메일 발송이 실패했습니다. Gmail 앱 비밀번호"
+            "(`GMAIL_APP_PASSWORD`) 또는 SMTP 설정을 확인해 주세요.\n\n"
+            "| 항목 | 값 |\n| --- | --- |\n"
+            f"| 발생 시각 | {ts_str} |\n"
+            f"| 메일 제목 | {subj} |\n"
+            f"| SMTP 호스트 | {cfg.get('SMTP_HOST', '?')} |\n"
+            f"| SMTP 사용자 | {cfg.get('SMTP_USER', '?')} |\n"
+            f"| 수신자 | {cfg.get('EMAIL_TO', '?')} |\n"
+            f"| 오류 메시지 | `{error}` |\n"
+            + (f"| 워크플로 실행 | {run_url} |\n" if run_url else "")
+            + "\n### 점검 체크리스트\n"
+            "- [ ] GitHub `Settings → Secrets and variables → Actions` 에 "
+            "`GMAIL_APP_PASSWORD` 시크릿이 등록되어 있는가\n"
+            "- [ ] Gmail 앱 비밀번호가 만료/폐기되지 않았는가 (2단계 인증 후 앱 비밀번호 재발급)\n"
+            "- [ ] `data/email.json` 의 `smtp_host`/`smtp_port`/`smtp_user` 값이 올바른가\n"
+            "- [ ] Gmail 측 비정상 로그인 차단 여부\n"
+        )
+        title = f"[Stock Alert] 이메일 전송 실패 — {now.strftime('%Y-%m-%d')}"
+
+        # 중복 방지: 동일 라벨의 열린 이슈가 있으면 댓글로 이어붙인다.
+        existing = None
+        try:
+            r = requests.get(f"{api}/issues", headers=headers,
+                             params={"state": "open", "labels": EMAIL_FAIL_LABEL, "per_page": 20},
+                             timeout=15)
+            if r.ok:
+                for it in r.json():
+                    if "pull_request" in it:   # PR 제외
+                        continue
+                    existing = it
+                    break
+        except Exception:
+            existing = None
+
+        if existing:
+            num = existing["number"]
+            cr = requests.post(f"{api}/issues/{num}/comments", headers=headers,
+                               json={"body": "🔁 이메일 전송이 다시 실패했습니다.\n\n" + body},
+                               timeout=15)
+            if cr.ok:
+                print(LOG_PREFIX + f"기존 이슈 #{num} 에 실패 내역을 댓글로 추가했습니다.", file=sys.stderr)
+                return True
+            print(LOG_PREFIX + f"이슈 댓글 등록 실패(HTTP {cr.status_code}) — 새 이슈 생성 시도",
+                  file=sys.stderr)
+
+        payload = {"title": title, "body": body, "labels": [EMAIL_FAIL_LABEL]}
+        cr = requests.post(f"{api}/issues", headers=headers, json=payload, timeout=15)
+        if not cr.ok and cr.status_code == 422:
+            # 라벨 문제 등으로 실패하면 라벨 없이 재시도
+            cr = requests.post(f"{api}/issues", headers=headers,
+                               json={"title": title, "body": body}, timeout=15)
+        if cr.ok:
+            print(LOG_PREFIX + f"GitHub 이슈 등록 완료: #{cr.json().get('number')}", file=sys.stderr)
+            return True
+        print(LOG_PREFIX + f"GitHub 이슈 등록 실패: HTTP {cr.status_code} {cr.text[:200]}",
+              file=sys.stderr)
+        return False
+    except Exception as e:
+        print(LOG_PREFIX + f"GitHub 이슈 등록 중 예외(무시): {e}", file=sys.stderr)
+        return False
+
+
+def send_email_or_report(cfg, subj, body, subtype="plain"):
+    """이메일을 발송하되, 실패하면 GitHub 이슈로 장애를 기록한 뒤 예외를 그대로 올린다."""
+    try:
+        send_email(cfg, subj, body, subtype=subtype)
+    except Exception as e:
+        report_email_failure_to_github(cfg, subj, e)
+        raise
+
 def validate_email_config(cfg):
     """알림을 놓치기 전에 필수 SMTP 설정 오류를 명확하게 실패시킨다."""
     required = ("SMTP_HOST", "SMTP_PORT", "SMTP_USER", "GMAIL_APP_PASSWORD", "EMAIL_FROM", "EMAIL_TO")
@@ -465,7 +571,7 @@ def send_test_email(cfg, ts_str):
     body = generate_html_body(cfg, ts_str, down_breaches, up_breaches, [], notes)
     to = cfg["EMAIL_TO"]
     print(LOG_PREFIX + f"[TEST] 테스트 메일 발송 시도 → {to}")
-    send_email(cfg, "[Stock Alert] ✅ 테스트 메일 (이메일 설정 점검용)", body, subtype="html")
+    send_email_or_report(cfg, "[Stock Alert] ✅ 테스트 메일 (이메일 설정 점검용)", body, subtype="html")
     print(LOG_PREFIX + "[TEST] 테스트 메일 발송 완료")
 
 def slack_blocks_header(ts_str):
@@ -623,10 +729,11 @@ def main():
         html_body = generate_html_body(cfg, ts_str, down_breaches, up_breaches, errors, rate_limited_notes)
         
         try:
-            send_email(cfg, "[Stock Alert] 임계 도달 종목 (상/하한)", html_body, subtype="html")
+            send_email_or_report(cfg, "[Stock Alert] 임계 도달 종목 (상/하한)", html_body, subtype="html")
         except Exception as e:
             # 실패를 성공(exit 0)으로 숨기지 않는다. 워크플로가 실패 알림을 표시하며,
             # 아래 임계값 갱신/상태 저장도 실행되지 않는다.
+            # (send_email_or_report 내부에서 GitHub 이슈 등록을 이미 시도함)
             raise RuntimeError(f"임계 알림 메일 발송 실패: {e}") from e
         print(LOG_PREFIX+"메일 발송 완료")
         state = pending_state

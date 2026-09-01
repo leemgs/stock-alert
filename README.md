@@ -245,6 +245,14 @@ gh workflow run "Weekly Stock Report (Saturday 9 AM)"
 일반 감시 실행도 SMTP 필수 설정이 없거나 실제 임계 알림 발송이 실패하면 성공으로
 처리하지 않으므로, GitHub Actions의 실패 상태에서 장애를 바로 확인할 수 있습니다.
 
+> **📮 이메일 전송 실패 시 GitHub 이슈 자동 등록:** `GMAIL_APP_PASSWORD`(Gmail 앱
+> 비밀번호)로 SMTP 발송이 실패하면, 발생 시각·SMTP 호스트/계정·수신자·오류 메시지·
+> 워크플로 실행 링크를 담은 **GitHub 이슈가 자동으로 생성**됩니다(라벨: `email-failure`).
+> 매시간 실행으로 이슈가 중복되지 않도록, 동일 라벨의 열린 이슈가 이미 있으면 새 이슈
+> 대신 **댓글로 실패 내역을 이어붙입니다**. 이 기능은 워크플로의 기본 제공 토큰
+> (`secrets.GITHUB_TOKEN`)과 `issues: write` 권한으로 동작하며, 별도 설정이 필요 없습니다.
+> (로컬 실행 등 `GITHUB_TOKEN`이 없는 환경에서는 이슈 등록을 조용히 건너뜁니다.)
+
 > **알림 유실 방지:** 메일 전송에 성공한 뒤에만 중복 방지 상태와 상·하한 임계값을
 > 소비합니다. SMTP 장애가 발생하면 임계값을 그대로 유지해 다음 스케줄 실행에서
 > 다시 발송을 시도합니다. `data/state.json`과 `data/history.json`은 Actions cache에
