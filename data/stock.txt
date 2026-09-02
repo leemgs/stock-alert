@@ -1,6 +1,6 @@
 # === AI ===
 AI, Alphabet Inc. Class C, GOOG, 310, 420, 구글 검색/안드로이드/유튜브 및 AI 연구(DeepMind)
-AI, Meta Platforms, META, 250, 585.64, 페이스북/인스타그램 및 메타버스/인공지능(LLM Llama) 연구 개발
+AI, Meta Platforms, META, 250, 644.20, 페이스북/인스타그램 및 메타버스/인공지능(LLM Llama) 연구 개발
 AI, NVIDIA Corporation, NVDA, 150, 600, 로봇 AI 두뇌 | Isaac | GPU 설계/가속 컴퓨팅/AI 칩 및 물리 엔진
 AI, Satoshi Holdings (deepmind), 223310.KQ, 2470.62, 4950, 인공지능(AI) 및 딥러닝 기반 소프트웨어 기술 투자/개발
 AI, Microsoft, MSFT, 300, 532.4, OS(Windows)/클라우드(Azure)/오피스 소프트웨어 및 생성형 AI(Copilot)
