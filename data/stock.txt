@@ -68,7 +68,7 @@ SW, Kakao Games, 293490.KQ, 6495.39, 42000, 모바일/PC 게임 퍼블리싱 및
 
 # === ETF ===
 ETF, SPDR S&P 500 ETF, SPY, 550, 800, 미국 대표 500대 기업에 투자하는 대표 지수 ETF (S&P 500 추종)
-ETF, Invesco QQQ (나스닥 100), QQQ, 480, 750, 나스닥 100 미래 기술주 중심 ETF | 포트폴리오 핵심 비중 권장 종목
+ETF, Invesco QQQ (나스닥 100), QQQ, 480, 825.00, 나스닥 100 미래 기술주 중심 ETF | 포트폴리오 핵심 비중 권장 종목
 ETF, VanEck 반도체 ETF, SMH, 250, 644.2, 글로벌 반도체 대표 기업(엔비디아/TSMC/ASML 등) 투자 테마 ETF
 ETF, First Trust 클라우드 컴퓨팅 ETF, SKYY, 100, 180, 클라우드 컴퓨팅·SaaS 인프라 성장 산업 투자 테마 ETF
 ETF, Invesco AI & Next Gen Software ETF, IGPT, 45, 108.9, 인공지능(AI)·차세대 소프트웨어 성장 산업 투자 테마 ETF
