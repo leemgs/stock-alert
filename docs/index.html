@@ -235,6 +235,9 @@
       <span id="editCount" class="sub" style="color:var(--muted)"></span>
       <button class="btn danger" id="resetBtn" title="편집 내용 초기화(원본 데이터로 되돌리기)">↺ 초기화</button>
     </div>
+    <div class="controls" style="margin-bottom:12px">
+      <input class="search" id="editSearch" type="search" placeholder="🔎 종목명 · 티커 · 도메인 검색…" autocomplete="off">
+    </div>
     <div class="tablewrap">
       <table id="editTable">
         <thead><tr>
@@ -284,7 +287,7 @@ const LS_STOCKS="stockalert.stocks", LS_THEME="stockalert.theme", LS_GH="stockal
 
 let DATA=null;          // parsed history.json
 let ENTRIES=[];         // effective entries (base or overlay), enriched with price data
-let state={domain:"ALL", period:"W", q:"", sort:"domain"};
+let state={domain:"ALL", period:"W", q:"", sort:"domain", editQ:""};
 
 /* ---------- helpers ---------- */
 function fmtPrice(v,cur){
@@ -623,8 +626,11 @@ function closeDetail(){ $("#detailBg").classList.remove("open"); bigChart=null; 
 /* ---------- editor ---------- */
 function renderEditor(){
   const list=effectiveList();
-  $("#editCount").textContent=`${list.length}개 종목`+(loadOverlay()?" · 편집됨(임시저장)":"");
-  $("#editBody").innerHTML=list.map((e,i)=>`
+  const q=state.editQ.toLowerCase();
+  const rows=list.map((e,i)=>({e,i}))
+    .filter(({e})=>!q || (e.name+" "+e.ticker+" "+e.domain+" "+(e.desc||"")).toLowerCase().includes(q));
+  $("#editCount").textContent=`${list.length}개 종목`+(loadOverlay()?" · 편집됨(임시저장)":"")+(q?` · 검색결과 ${rows.length}개`:"");
+  $("#editBody").innerHTML=rows.map(({e,i})=>`
     <tr>
       <td>${esc(e.domain)}</td>
       <td><b>${esc(e.name)}</b></td>
@@ -636,7 +642,7 @@ function renderEditor(){
         <button class="mini" data-act="edit" data-i="${i}">수정</button>
         <button class="mini" data-act="del" data-i="${i}">삭제</button>
       </div></td>
-    </tr>`).join("") || `<tr><td colspan="7" class="empty">종목이 없습니다.</td></tr>`;
+    </tr>`).join("") || `<tr><td colspan="7" class="empty">${q?`"${esc(state.editQ)}" 검색 결과가 없습니다.`:"종목이 없습니다."}</td></tr>`;
   $$("#editBody .mini").forEach(b=>b.onclick=()=>{
     const i=+b.dataset.i;
     if(b.dataset.act==="edit") openForm(i);
@@ -742,10 +748,15 @@ async function ghCommit(){
 /* ---------- glue ---------- */
 function refreshAll(){ rebuildEntries(); renderTiles(); renderChips(); renderGrid(); renderEditor(); }
 
-function switchTab(name){
+const TAB_HASH={dash:"#dashboard", edit:"#manage"};
+const HASH_TAB={"#dashboard":"dash","#dash":"dash","#manage":"edit","#edit":"edit"};
+function tabFromHash(){ return HASH_TAB[location.hash]||"dash"; }
+function switchTab(name,updateHash=true){
+  if(!TAB_HASH[name]) name="dash";
   $$(".tab").forEach(t=>t.classList.toggle("active",t.dataset.tab===name));
   $("#tab-dash").classList.toggle("hidden",name!=="dash");
   $("#tab-edit").classList.toggle("hidden",name!=="edit");
+  if(updateHash && location.hash!==TAB_HASH[name]) location.hash=TAB_HASH[name];
 }
 function applyTheme(t){
   if(t==="dark"||t==="light") document.documentElement.setAttribute("data-theme",t);
@@ -755,6 +766,7 @@ function applyTheme(t){
 }
 function initEvents(){
   $$(".tab").forEach(t=>t.onclick=()=>switchTab(t.dataset.tab));
+  addEventListener("hashchange",()=>switchTab(tabFromHash(),false));
   $$("#periodSeg button").forEach(b=>b.onclick=()=>{
     $$("#periodSeg button").forEach(x=>x.classList.remove("active")); b.classList.add("active");
     state.period=b.dataset.p; renderGrid();
@@ -773,6 +785,13 @@ function initEvents(){
   $("#formBg").onclick=e=>{ if(e.target===$("#formBg")) $("#formBg").classList.remove("open"); };
   document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeDetail(); $("#formBg").classList.remove("open"); } });
   $("#addBtn").onclick=()=>openForm(null);
+  const editSearchEl=$("#editSearch");
+  const clearEditSearch=()=>{ editSearchEl.value=""; if(state.editQ){ state.editQ=""; renderEditor(); } };
+  editSearchEl.oninput=()=>{
+    if(document.activeElement!==editSearchEl){ clearEditSearch(); return; }
+    state.editQ=editSearchEl.value.trim(); renderEditor();
+  };
+  clearEditSearch();
   $("#dlBtn").onclick=downloadTxt; $("#copyBtn").onclick=copyTxt;
   $("#resetBtn").onclick=()=>{ if(confirm("편집 내용을 모두 지우고 원본 데이터로 되돌릴까요?")){ localStorage.removeItem(LS_STOCKS); refreshAll(); toast("초기화됨"); } };
   $("#ghCommit").onclick=ghCommit;
@@ -801,6 +820,7 @@ async function boot(){
   $("#genat").textContent=`${DATA.count}개 종목 · 갱신 ${dt.toLocaleString("ko-KR",{dateStyle:"medium",timeStyle:"short"})} · ${DATA.period}/${DATA.interval}`;
   initGhForm();
   refreshAll();
+  switchTab(tabFromHash(),false);
 }
 boot();
 </script>
