@@ -525,10 +525,35 @@ function renderChips(){
   $("#domainChips").innerHTML=doms.map(d=>`<button class="chip ${state.domain===d?"active":""}" data-d="${d}">${d==="ALL"?"전체":d}</button>`).join("");
   $$("#domainChips .chip").forEach(c=>c.onclick=()=>{ state.domain=c.dataset.d; renderChips(); renderGrid(); });
 }
+/* 종목명 검색 보조: 한글/영문 별칭 (검색어 매칭용, 티커 기준) */
+const NAME_ALIAS={
+  "GOOG":"알파벳 구글 구글C", "META":"메타 메타플랫폼 페이스북 페북 인스타그램",
+  "NVDA":"엔비디아", "MSFT":"마이크로소프트 엠에스", "SPCX":"스페이스엑스 스페이스X",
+  "AMZN":"아마존", "IONQ":"아이온큐", "035420.KS":"네이버",
+  "000660.KS":"SK하이닉스 에스케이하이닉스 하이닉스", "005930.KS":"삼성전자 삼성",
+  "018260.KS":"삼성에스디에스 삼성SDS 삼성", "066570.KS":"엘지전자 LG전자",
+  "ASML":"에이에스엠엘", "0700.HK":"텐센트", "ORCL":"오라클", "293490.KQ":"카카오게임즈 카카오",
+  "277810.KQ":"레인보우", "058610.KQ":"SPG", "389500.KQ":"SBB",
+  "TSLA":"테슬라", "TER":"테라다인", "6324.T":"하모닉드라이브 하모닉",
+  "6268.T":"나브테스코", "6481.T":"THK", "6594.T":"니덱", "002050.SZ":"산화 싼화",
+  "MOG-A":"무그", "034020.KS":"두산에너빌리티 두산", "373220.KS":"엘지에너지솔루션 LG에너지솔루션 엘지엔솔",
+  "006400.KS":"삼성에스디아이 삼성SDI 삼성", "207940.KS":"삼성바이오로직스 삼성바이오 삼성",
+  "AMGN":"암젠", "ILMN":"일루미나", "089590.KS":"제주항공", "ABNB":"에어비앤비",
+  "SPY":"에스앤피 S&P500", "QQQ":"나스닥 나스닥100 큐큐큐", "SMH":"반도체 반도체ETF",
+  "SKYY":"클라우드 클라우드컴퓨팅", "IGPT":"AI 소프트웨어", "GRID":"전력 스마트그리드 그리드",
+  "IBB":"바이오 바이오테크", "VUG":"성장주 그로스",
+  "005380.KS":"현대차 현대자동차 현대", "000270.KS":"기아 기아차",
+  "323410.KS":"카카오뱅크 카카오", "DIS":"디즈니 월트디즈니", "NFLX":"넷플릭스",
+  "BTC-USD":"비트코인", "VIC.VN":"빈그룹", "CORN":"옥수수", "WEAT":"밀",
+  "223310.KQ":"사토시홀딩스 딥마인드"
+};
+function searchText(e){
+  return (e.name+" "+e.ticker+" "+(e.domain||"")+" "+(e.desc||"")+" "+(NAME_ALIAS[e.ticker]||"")).toLowerCase();
+}
 function filteredEntries(){
   let arr=ENTRIES.slice();
   if(state.domain!=="ALL") arr=arr.filter(e=>e.domain===state.domain);
-  if(state.q){ const q=state.q.toLowerCase(); arr=arr.filter(e=>(e.name+" "+e.ticker).toLowerCase().includes(q)); }
+  if(state.q){ const q=state.q.toLowerCase(); arr=arr.filter(e=>searchText(e).includes(q)); }
   const s=state.sort;
   arr.sort((a,b)=>{
     if(s==="name") return a.name.localeCompare(b.name,"ko");
@@ -684,7 +709,7 @@ function renderEditor(){
   const list=effectiveList();
   const q=state.editQ.toLowerCase();
   const rows=list.map((e,i)=>({e,i}))
-    .filter(({e})=>!q || (e.name+" "+e.ticker+" "+e.domain+" "+(e.desc||"")).toLowerCase().includes(q));
+    .filter(({e})=>!q || searchText(e).includes(q));
   $("#editCount").textContent=`${list.length}개 종목`+(loadOverlay()?" · 편집됨(임시저장)":"")+(q?` · 검색결과 ${rows.length}개`:"");
   $("#editBody").innerHTML=rows.map(({e,i})=>{
     const pd=DATA.tickers[e.ticker]||null;
