@@ -50,6 +50,8 @@ IT, Tencent Holdings, 0700.HK, 250, 700, 중국 최대 소셜 미디어(WeChat)/
 농업, TIGER 농산물선물Enhanced(H), 137610.KS, 1000, 5846.15, 밀/옥수수/대두/설탕 등 대표 농산물 선물 지수 추종 ETF (S&P GSCI Agriculture Enhanced)
 농업, KODEX 3대농산물선물(H), 271060.KS, 6000, 12000, 옥수수/콩/밀 3대 곡물 선물 투자 ETF (S&P GSCI Grains Select)
 농업, 메리츠 레버리지 대표 농산물 선물 ETN(H), 610035.KS, 5000, 15000, 대표 농산물 선물 2배 레버리지 추종 ETN | ⚠ yfinance 미지원 가능성 (조회 실패 시 알림 미동작)
+농업, Teucrium Corn Fund, CORN, 16, 20, 옥수수(Corn) 선물 가격 추종 ETF | 시카고상품거래소(CBOT) 옥수수 선물 투자
+농업, Teucrium Wheat Fund, WEAT, 20, 26, 밀(Wheat) 선물 가격 추종 ETF | 시카고상품거래소(CBOT) 밀 선물 투자
 
 # === 건설 ===
 건설, 특수건설, 026150.KQ, 3171.55, 12000, 실드터널/대구경 교량 기초 등 특수 기초 및 터널 굴착 시공
