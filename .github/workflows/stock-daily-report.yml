@@ -2,7 +2,12 @@ name: Daily Stock Report (1-hour)
 
 on:
   schedule:
-    - cron: "0 */1 * * *"   # every 1 hour (UTC)
+    # 정각(:00)은 GitHub 스케줄 지연이 가장 심해 분을 어긋나게 설정한다 (실행이 6~11시간씩 밀리는 사례 확인).
+    # 1) 상시 감시: 매시 47분 (미국/일본/홍콩/코인 등 전 종목, 주말 포함)
+    - cron: "47 * * * *"
+    # 2) 한국 장중 집중 감시: 평일 09:07~15:52 KST (= 00:07~06:52 UTC), 15분 간격
+    #    장 마감(15:30 KST) 이후 종가 확정 시점(15:37, 15:52)까지 포함
+    - cron: "7,22,37,52 0-6 * * 1-5"
   workflow_dispatch:
     inputs:
       test_email:
@@ -74,6 +79,8 @@ jobs:
             git config --local user.name "GitHub Action"
             git add data/stock.txt
             git commit -m "[Stock Alert] Update thresholds (+/- 10%)"
+            # 실행이 잦아져 다른 워크플로(대시보드 데이터)와 push 가 겹칠 수 있으므로 rebase 후 push
+            git pull --rebase origin main
             git push
           else
             echo "No changes in stock.txt"

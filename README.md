@@ -98,7 +98,7 @@ sequenceDiagram
 
 **흐름 요약**
 
-1. **트리거**: GitHub Actions가 1시간마다(`0 */1 * * *`) 워크플로를 실행합니다.
+1. **트리거**: GitHub Actions가 매시 47분(`47 * * * *`)에 상시 실행하고, 한국 장중(평일 09:07~15:52 KST)에는 15분 간격(`7,22,37,52 0-6 * * 1-5`, UTC)으로 추가 실행합니다. (정각은 GitHub 스케줄 지연이 커서 피했습니다.)
 2. **로드**: `data/stock.txt`에서 종목·카테고리·임계값(`price_down`/`price_up`)을 읽어옵니다.
 3. **수집·판정**: 종목별로 `yfinance` 실시간 시세를 받아 상/하한 돌파 여부를 비교합니다.
 4. **Rate-Limit**: 종목당 일일 최대 횟수, 최소 발송 간격, 글로벌 캡을 확인해 과도한 알림을 억제합니다.
@@ -136,7 +136,7 @@ stock-alert/
 │   └── run.sh
 └── .github/
     └── workflows/
-        ├── stock-daily-report.yml     # 1시간마다 자동 알림
+        ├── stock-daily-report.yml     # 매시 + 한국 장중 15분마다 자동 알림
         └── stock-weekly-report.yml # 주간 리포트 (매주 토요일 9시)
 ```
 
@@ -212,7 +212,7 @@ IT, Samsung Electronics, 005930.KS, 60000.00, 384326.25, 메모리 반도체/스
 이 프로젝트는 별도 서버 없이 GitHub Actions로 자동 실행할 수 있습니다.
 레포에 포함된 워크플로 파일:
 
-* `.github/workflows/stock-daily-report.yml` → **1시간마다 자동 알림 (상/하한 돌파)**
+* `.github/workflows/stock-daily-report.yml` → **매시 + 한국 장중 15분마다 자동 알림 (상/하한 돌파)**
 * `.github/workflows/stock-weekly-report.yml` → **매주 토요일 09:00 KST 주간 동향 리포트**
 
 ### 1️⃣ Secrets 및 Variables 등록 (Settings → Secrets and variables → Actions)
