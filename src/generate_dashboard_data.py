@@ -237,7 +237,57 @@ def fetch_ticker(stock):
     }
 
 
+def sync_thresholds(stocks_path=STOCKS_PATH, history_path=OUT_PATH):
+    """history.json 의 임계값/이름/도메인/설명을 stock.txt 와 일치시킨다.
+
+    대시보드는 history.json(스냅샷)을 읽지만 임계값은 알림 발동 시 stock.txt 에서
+    수시로 바뀐다(±10% 자동 조정). 시세를 다시 수집하지 않고(네트워크 호출 없음)
+    이 필드들만 맞춰서 화면의 임계값이 stock.txt 와 어긋나지 않게 한다.
+    시세·차트·generated_at 은 건드리지 않으며, 변경이 없으면 파일을 쓰지 않는다.
+
+    반환: [(ticker, field, old, new), ...]
+    """
+    history_path = Path(history_path)
+    if not history_path.exists():
+        return []
+    data = json.loads(history_path.read_text(encoding="utf-8"))
+    tickers = data.get("tickers", {})
+    stocks = load_stocks(Path(stocks_path))
+
+    changes = []
+    for s in stocks:
+        t = tickers.get(s["ticker"])
+        if t is None:      # 아직 시세가 수집되지 않은 신규 종목 — 다음 전체 수집 때 추가됨
+            continue
+        want = {"name": s["name"], "domain": s["loc"], "desc": s["desc"],
+                "down": s["down"], "up": s["up"]}
+        for field, new in want.items():
+            if t.get(field) != new:
+                changes.append((s["ticker"], field, t.get(field), new))
+                t[field] = new
+
+    if changes:
+        if any(field == "domain" for _, field, _, _ in changes):
+            domains = []
+            for s in stocks:
+                if s["loc"] and s["loc"] not in domains:
+                    domains.append(s["loc"])
+            data["domains"] = domains
+        history_path.write_text(
+            json.dumps(data, ensure_ascii=False, separators=(",", ":")),
+            encoding="utf-8",
+        )
+    return changes
+
+
 def main():
+    if "--sync-thresholds" in sys.argv:
+        changes = sync_thresholds()
+        for tkr, field, old, new in changes:
+            print(f"[dashboard] 동기화 {tkr} {field}: {old!r} -> {new!r}")
+        print(f"[dashboard] 임계값 동기화 완료 (변경 {len(changes)}건)")
+        return
+
     stocks = load_stocks(STOCKS_PATH)
     print(f"[dashboard] {len(stocks)}개 종목 데이터 수집 시작 "
           f"(period={PERIOD}, interval={INTERVAL})")

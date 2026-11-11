@@ -1,0 +1,40 @@
+name: Dashboard Sync (stock.txt → dashboard)
+
+# 대시보드 스냅샷(docs/data/history.json)의 임계값·이름·도메인·설명을 data/stock.txt 와 즉시 일치시킵니다.
+# - 사용자가 대시보드의 "GitHub에 직접 커밋"(PAT)이나 웹/IDE 에서 stock.txt 를 수정해 push 하면 실행됩니다.
+# - 알림 워크플로(stock-daily-report)가 GITHUB_TOKEN 으로 push 하는 경우에는 GitHub 정책상 이 트리거가
+#   발동하지 않으므로, 해당 워크플로가 같은 스크립트(src/sync_dashboard.sh)를 직접 호출합니다.
+# - 시세는 다시 수집하지 않습니다(네트워크 호출 없음, 수 초 소요). 이 워크플로가 만든 커밋은
+#   data/stock.txt 를 건드리지 않으므로 스스로를 다시 트리거하지 않습니다.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/stock.txt"
+  workflow_dispatch: {}
+
+# 항상 최신 origin/main 기준으로 다시 계산하므로, 진행 중인 이전 실행은 취소해도 안전합니다.
+concurrency:
+  group: dashboard-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Sync dashboard thresholds
+        run: bash src/sync_dashboard.sh

@@ -74,17 +74,32 @@ jobs:
       - name: Sync stock.txt back and commit
         if: success()
         run: |
-          if ! git diff --quiet data/stock.txt; then
-            git config --local user.email "action@github.com"
-            git config --local user.name "GitHub Action"
-            git add data/stock.txt
-            git commit -m "[Stock Alert] Update thresholds (+/- 10%)"
-            # 실행이 잦아져 다른 워크플로(대시보드 데이터)와 push 가 겹칠 수 있으므로 rebase 후 push
-            git pull --rebase origin main
-            git push
-          else
+          if git diff --quiet data/stock.txt; then
             echo "No changes in stock.txt"
+            exit 0
           fi
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data/stock.txt
+          git commit -m "[Stock Alert] Update thresholds (+/- 10%)"
+          # 실행이 잦아져 다른 워크플로(대시보드 데이터)와 push 가 겹칠 수 있으므로 rebase 후 push (최대 4회 재시도)
+          for i in 1 2 3 4; do
+            if git pull --rebase origin main && git push; then
+              exit 0
+            fi
+            git rebase --abort 2>/dev/null || true
+            sleep $((i * 5))
+          done
+          echo "stock.txt 임계값 push 실패" >&2
+          exit 1
+
+      # 대시보드는 docs/data/history.json(스냅샷)을 읽는데, 이 스냅샷은 하루 2회만 재생성되어
+      # stock.txt 의 임계값 자동 조정(±10%)이 화면에 반영되지 않고 어긋났다.
+      # 시세 호출 없이 임계값/이름/도메인/설명만 stock.txt 와 일치시킨다 (변경이 없으면 아무 것도 안 함).
+      # stock.txt 변경 여부와 무관하게 매 실행마다 돌려, 어떤 경로로 어긋나도 다음 실행에서 수렴한다.
+      - name: Sync dashboard thresholds
+        if: success()
+        run: bash src/sync_dashboard.sh
 
       - name: Save runtime state cache
         if: always()

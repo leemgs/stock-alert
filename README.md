@@ -137,6 +137,7 @@ stock-alert/
 └── .github/
     └── workflows/
         ├── stock-daily-report.yml     # 매시 + 한국 장중 15분마다 자동 알림
+        ├── dashboard-sync.yml         # stock.txt 수정 시 대시보드 임계값 즉시 동기화
         └── stock-weekly-report.yml # 주간 리포트 (매주 토요일 9시)
 ```
 
@@ -214,6 +215,8 @@ IT, Samsung Electronics, 005930.KS, 60000.00, 384326.25, 메모리 반도체/스
 
 * `.github/workflows/stock-daily-report.yml` → **매시 + 한국 장중 15분마다 자동 알림 (상/하한 돌파)**
 * `.github/workflows/stock-weekly-report.yml` → **매주 토요일 09:00 KST 주간 동향 리포트**
+* `.github/workflows/dashboard-sync.yml` → **`data/stock.txt` 가 바뀌면 대시보드(`docs/data/history.json`)의 임계값을 시세 재수집 없이 즉시 일치**
+  (알림 워크플로의 ±10% 자동 조정은 같은 스크립트 `src/sync_dashboard.sh` 로 바로 반영되며, 매 실행마다 한 번 더 수렴시킵니다)
 
 ### 1️⃣ Secrets 및 Variables 등록 (Settings → Secrets and variables → Actions)
 

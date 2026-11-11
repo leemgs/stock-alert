@@ -208,6 +208,9 @@
     <button class="tab" data-tab="edit">✏️ 종목 관리</button>
   </nav>
 
+  <!-- 이 브라우저의 임시 편집본(localStorage)이 서버 데이터와 다를 때 알림 -->
+  <div class="note hidden" id="overlayBanner" style="border-left-color:var(--up)"></div>
+
   <!-- ============ DASHBOARD ============ -->
   <section id="tab-dash">
     <div class="tiles" id="tiles"></div>
@@ -480,6 +483,54 @@ function loadOverlay(){
 }
 function saveOverlay(list){ localStorage.setItem(LS_STOCKS,JSON.stringify(list)); }
 function effectiveList(){ return loadOverlay() || baseFromData(); }
+
+/* ---------- 임시 편집본(overlay) vs 서버 데이터 ----------
+   편집본은 localStorage 에 남아 서버(stock.txt → history.json) 값을 계속 가린다.
+   알림 후 봇이 임계값을 자동 조정해도 이 브라우저에는 옛 값이 보이는 원인이 되므로,
+   서버 값과 다르면 알리고, 같아지면 조용히 정리한다. */
+const SS_OV_DISMISS="stockalert.ovDismissed";
+function numOrNull(v){ if(v===""||v==null) return null; const n=Number(v); return isNaN(n)?null:n; }
+function normEntry(e){
+  return {domain:String(e.domain||"").trim(), name:String(e.name||"").trim(), ticker:String(e.ticker||"").trim(),
+          down:numOrNull(e.down), up:numOrNull(e.up), desc:String(e.desc||"").trim()};
+}
+const OV_FIELDS=[["down","하락(매수)"],["up","상승(매도)"],["name","종목명"],["domain","도메인"],["desc","설명"]];
+function overlayDiff(){
+  const ov=loadOverlay(); if(!Array.isArray(ov)) return null;
+  const base=baseFromData().map(normEntry), local=ov.map(normEntry);
+  const bm=new Map(base.map(e=>[e.ticker,e])), lm=new Map(local.map(e=>[e.ticker,e]));
+  const items=[];
+  for(const l of local){
+    const b=bm.get(l.ticker);
+    if(!b){ items.push({kind:"add",name:l.name}); continue; }
+    for(const [f,label] of OV_FIELDS) if(l[f]!==b[f]) items.push({kind:"chg",name:l.name,label,field:f,local:l[f],server:b[f]});
+  }
+  for(const b of base) if(!lm.has(b.ticker)) items.push({kind:"del",name:b.name});
+  return items;
+}
+function healOverlay(){   // 서버 값과 동일해진 편집본은 더 이상 필요 없으므로 제거
+  try{ const d=overlayDiff(); if(d && d.length===0) localStorage.removeItem(LS_STOCKS); }catch(_){}
+}
+function renderOverlayBanner(){
+  const el=$("#overlayBanner"); if(!el) return;
+  let d=null, dismissed=false;
+  try{ d=overlayDiff(); dismissed=sessionStorage.getItem(SS_OV_DISMISS)==="1"; }catch(_){}
+  if(!d || !d.length || dismissed){ el.classList.add("hidden"); el.innerHTML=""; return; }
+  const fv=(f,v)=>v==null?"—":(f==="down"||f==="up")?Number(v).toLocaleString("ko-KR"):String(v);
+  const lines=d.slice(0,3).map(x=>
+    x.kind==="chg"?`${esc(x.name)} ${x.label}: <b>이 브라우저 ${esc(fv(x.field,x.local))}</b> ↔ 서버 ${esc(fv(x.field,x.server))}`
+    :x.kind==="add"?`${esc(x.name)}: 이 브라우저에만 추가됨`:`${esc(x.name)}: 이 브라우저에서 삭제됨`);
+  el.innerHTML=`⚠️ 이 브라우저에 <b>임시 저장된 편집본</b>이 있어 서버(stock.txt 기준) 값과 <b>${d.length}건</b> 다릅니다.<br>
+    <span style="color:var(--text-secondary)">${lines.join(" · ")}${d.length>3?` 외 ${d.length-3}건`:""}</span><br>
+    <span style="color:var(--muted)">서버 값이 맞다면 되돌리세요. 편집 후 커밋했다면 서버에 반영된 뒤 자동으로 정리됩니다.</span>
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn primary" id="ovRevert" style="padding:6px 12px">서버 값으로 되돌리기</button>
+      <button class="btn" id="ovDismiss" style="padding:6px 12px">이번엔 닫기</button>
+    </div>`;
+  el.classList.remove("hidden");
+  $("#ovRevert").onclick=()=>{ try{ localStorage.removeItem(LS_STOCKS); }catch(_){} refreshAll(); toast("서버 값으로 되돌렸습니다"); };
+  $("#ovDismiss").onclick=()=>{ try{ sessionStorage.setItem(SS_OV_DISMISS,"1"); }catch(_){} el.classList.add("hidden"); };
+}
 
 function rebuildEntries(){
   const list=effectiveList();
@@ -834,7 +885,7 @@ async function ghCommit(){
 }
 
 /* ---------- glue ---------- */
-function refreshAll(){ rebuildEntries(); renderTiles(); renderChips(); renderGrid(); renderEditor(); }
+function refreshAll(){ rebuildEntries(); renderTiles(); renderChips(); renderGrid(); renderEditor(); renderOverlayBanner(); }
 
 const TAB_HASH={dash:"#dashboard", edit:"#manage"};
 const HASH_TAB={"#dashboard":"dash","#dash":"dash","#manage":"edit","#edit":"edit"};
@@ -908,6 +959,7 @@ async function boot(){
   const dt=new Date(DATA.generated_at);
   $("#genat").textContent=`${DATA.count}개 종목 · 갱신 ${dt.toLocaleString("ko-KR",{dateStyle:"medium",timeStyle:"short"})} · ${DATA.period}/${DATA.interval}`;
   initGhForm();
+  healOverlay();
   refreshAll();
   switchTab(tabFromHash(),false);
 }
