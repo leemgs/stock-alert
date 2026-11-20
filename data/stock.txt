@@ -2,7 +2,7 @@
 AI, Alphabet Inc. Class C, GOOG, 251.1, 420, 구글 검색/안드로이드/유튜브 및 AI 연구(DeepMind)
 AI, Meta Platforms, META, 250, 779.48, 페이스북/인스타그램 및 메타버스/인공지능(LLM Llama) 연구 개발
 AI, NVIDIA Corporation, NVDA, 135.00, 600, 로봇 AI 두뇌 | Isaac | GPU 설계/가속 컴퓨팅/AI 칩 및 물리 엔진
-AI, Satoshi Holdings (deepmind), 223310.KQ, 2223.56, 4950, 인공지능(AI) 및 딥러닝 기반 소프트웨어 기술 투자/개발
+AI, Satoshi Holdings (deepmind), 223310.KQ, 2001.20, 4950, 인공지능(AI) 및 딥러닝 기반 소프트웨어 기술 투자/개발
 AI, Microsoft, MSFT, 300, 585.64, OS(Windows)/클라우드(Azure)/오피스 소프트웨어 및 생성형 AI(Copilot)
 AI, SpaceX, SPCX, 130.41, 250, 민간 우주개발 및 재사용 우주선(Falcon/Starship)/우주인터넷(Starlink)
 
@@ -32,7 +32,7 @@ SW, Kakao Games, 293490.KQ, 6495.39, 42000, 모바일/PC 게임 퍼블리싱 및
 로봇, TIGER 차이나휴머노이드로봇, 0053L0.KS, 7200, 15000, 중국 휴머노이드 로봇 밸류체인 ETF | UBTech/Inovance/iFlytek 등 완성 로봇·핵심 부품 기업 투자
 로봇, Tesla Inc., TSLA, 250, 500, Optimus 휴머노이드 - 전기자동차(EV)/자율주행(FSD)/ESS 및 휴머노이드 로봇
 로봇, Teradyne, TER, 218.70, 506, 반도체·전자 부품 자동 테스트 장비(ATE) 및 협동 로봇(UR/MiR)
-로봇, Harmonic Drive Systems, 6324.T, 4050.00, 9075, 정밀 로봇 관절용 하모닉 드라이브 감속기 글로벌 선도 기업
+로봇, Harmonic Drive Systems, 6324.T, 3645.00, 9075, 정밀 로봇 관절용 하모닉 드라이브 감속기 글로벌 선도 기업
 로봇, Nabtesco, 6268.T, 3000, 6000, 액추에이터/피지컬 AI - 로봇 관절용 RV 정밀 감속기 세계 1위(점유율 ~35%)
 로봇, THK, 6481.T, 3000, 7986, 액추에이터/피지컬 AI - 리니어 모션 가이드·볼스크류 및 휴머노이드 구동 부품
 로봇, Nidec Corporation, 6594.T, 1640.25, 5000, 액추에이터/피지컬 AI - 정밀 모터 세계 1위 및 로봇 구동용 액추에이터·기어드 모터
@@ -80,7 +80,7 @@ ETF, Vanguard Growth ETF, VUG, 78.25, 600, 미국 대형 장기 성장주(Growth
 
 # === 기타 ===
 기타, Hyundai Motor Company, 005380.KS, 190000, 822800, 글로벌 완성차 제조 및 친환경차(EV/FCEV)/미래 모빌리티 개발
-기타, Kia Corporation, 000270.KS, 90000, 165000, 글로벌 완성차 제조 및 전기차(EV)/목적기반차량(PBV)·미래 모빌리티
+기타, Kia Corporation, 000270.KS, 81000.00, 165000, 글로벌 완성차 제조 및 전기차(EV)/목적기반차량(PBV)·미래 모빌리티
 기타, KakaoBank, 323410.KS, 18000, 29000, 모바일 완결형 뱅킹 및 혁신 금융 서비스를 제공하는 인터넷전문은행
 기타, The Walt Disney Company, DIS, 80, 150, 글로벌 종합 엔터테인먼트/미디어 그룹 및 테마파크/OTT(Disney+)
 기타, Netflix, NFLX, 55.93, 1500, 글로벌 1위 OTT 스트리밍 서비스 및 오리지널 콘텐츠 제작·배급
