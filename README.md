@@ -130,6 +130,10 @@ stock-alert/
 ├── requirements.txt
 ├── data/
 │   └── stock.txt
+├── docs/                          # GitHub Pages 대시보드
+│   ├── index.html
+│   ├── assets/site.js             # 접속 코드 게이트 (initAuth / unlock)
+│   └── config/access.json         # 접속 코드의 SHA-256 해시(digest)·version
 ├── src/
 │   ├── multi_stock_alert.py
 │   ├── weekly_report.py
@@ -341,6 +345,45 @@ Subject: [Stock Alert] 임계 도달 종목 (상/하한)
 
 > Actions 러너는 매 실행마다 초기화되므로,
 > `history.json` 보존에는 `actions/cache` 또는 외부 스토리지(S3, Redis 등) 연동을 권장합니다.
+
+---
+
+## 🔐 홈페이지 접속 코드 (간단 접근 제한)
+
+대시보드(GitHub Pages)는 **초대받은 사용자를 위한 정보 공간**입니다. 접속 코드를 아는 사용자만 화면을 볼 수 있도록 간단한 코드 게이트를 둡니다.
+
+* 구현: `docs/assets/site.js` 의 `initAuth()` / `unlock()`
+* 설정: `docs/config/access.json` 에 **접속 코드의 SHA-256 해시(`digest`)와 `version`만** 저장합니다 (평문 코드는 저장하지 않습니다).
+  `digest` 는 문자열 1개 또는 **배열(접속 코드 여러 개)** 이며, 기본 설정은 2개의 코드를 허용합니다.
+* 동작: 입력한 코드를 브라우저에서 SHA-256 으로 해시해 `access.json` 의 `digest` 와 비교하고, 일치하면 `sessionStorage` 에 접근 허용 상태를 기록합니다. 탭/브라우저를 닫으면 다시 입력해야 하며, 화면 우상단 **🔒 잠금** 버튼으로 바로 잠글 수도 있습니다.
+* 설정 파일(`access.json`)을 읽지 못하면 열어 주지 않습니다(fail-closed).
+
+> ⚠️ **정적 사이트의 간단한 접근 제한이며, 민감정보 보호 목적이 아닙니다.** 해시가 클라이언트에 노출되므로(누구나 `access.json` 을 볼 수 있음) 진짜 보안 경계로 사용하지 마세요.
+> 대시보드 데이터(`docs/data/history.json`)도 URL 로 직접 접근하면 읽을 수 있습니다.
+>
+> 해시가 공개되고 SHA-256 은 빠르게 계산되므로, **짧거나 규칙적인 코드(단어+숫자 등)는 해시만 보고 누구나 역산할 수 있습니다.** 기본 코드는 임시값으로 보고, 외부에 공개된 사이트라면 **추측하기 어려운 긴 값(12자 이상 무작위)** 으로 교체하세요.
+
+### 접속 코드 변경 방법
+
+1. 새 코드를 정합니다. (앞뒤 공백이 없는 값을 사용하세요. 입력 시 앞뒤 공백은 무시됩니다.)
+2. SHA-256 해시를 계산합니다.
+
+   ```bash
+   node -e "const c=require('crypto');console.log(c.createHash('sha256').update('새코드').digest('hex'))"
+   ```
+
+3. `docs/config/access.json` 의 `digest` 값을 교체하고 `version` 을 올립니다. (코드를 여러 개 두려면 `digest` 를 배열로 두고 해당 항목을 교체/추가/삭제합니다.)
+
+   ```json
+   {
+     "digest": ["<코드 1의 64자리 해시>", "<코드 2의 64자리 해시>"],
+     "version": 2
+   }
+   ```
+
+   (코드가 1개뿐이면 `"digest": "<64자리 해시>"` 처럼 문자열로 써도 됩니다.)
+
+> `version` 을 올리거나, 세션을 연 코드의 해시를 `digest` 에서 빼면 이미 접속해 있던 세션도 다음 새로고침 때 다시 코드를 요구합니다. 변경 후 GitHub Pages 에 반영되기까지 1~2분 걸릴 수 있습니다. 새 코드의 평문은 저장소에 커밋하지 마세요.
 
 ---
 

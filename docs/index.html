@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stock Alert Dashboard</title>
+<!-- 간단 접속 코드 게이트(초대받은 사용자용). 인증 전에는 본문을 숨기기 위해 <head> 에서 동기 로드한다. -->
+<script src="assets/site.js"></script>
 <style>
   :root{
     color-scheme: light;
@@ -199,6 +201,7 @@
       </div>
     </div>
     <div class="spacer"></div>
+    <button class="icon-btn" id="lockBtn" title="접속 잠금 (이 탭의 접근 허용 상태를 지웁니다)">🔒 잠금</button>
     <button class="icon-btn" id="themeBtn" title="테마 전환">🌓 <span id="themeLbl">테마</span></button>
     <a class="icon-btn" href="https://github.com/leemgs/stock-alert" target="_blank" rel="noopener">↗ GitHub</a>
   </header>
@@ -935,6 +938,7 @@ function initEvents(){
   $("#dlBtn").onclick=downloadTxt; $("#copyBtn").onclick=copyTxt;
   $("#resetBtn").onclick=()=>{ if(confirm("편집 내용을 모두 지우고 원본 데이터로 되돌릴까요?")){ localStorage.removeItem(LS_STOCKS); refreshAll(); toast("초기화됨"); } };
   $("#ghCommit").onclick=ghCommit;
+  $("#lockBtn").onclick=()=>lockSite();
   $("#themeBtn").onclick=()=>{
     const cur=localStorage.getItem(LS_THEME);
     const next=cur==="dark"?"light":cur==="light"?"":"dark";
@@ -963,7 +967,8 @@ async function boot(){
   refreshAll();
   switchTab(tabFromHash(),false);
 }
-boot();
+// 접속 코드 확인(initAuth) 이후에만 데이터를 불러오고 화면을 구성한다.
+initAuth().then(boot);
 </script>
 </body>
 </html>
